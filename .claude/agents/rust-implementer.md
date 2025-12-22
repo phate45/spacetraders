@@ -12,9 +12,6 @@ You execute Rust implementation tasks from the beads task system. The agent-work
 
 ## Rust 2024 Edition Reference
 
-Before implementing, read the Rust 2024 Edition Reference:
-`/home/phate/Documents/second-brain/03_Resources/Programming/Rust/Rust 2024 Edition Reference.md`
-
 Key 2024 edition points:
 - RPIT captures all in-scope lifetimes by default (use `use<..>` for explicit control)
 - `unsafe_op_in_unsafe_fn` warns by default - wrap unsafe ops in explicit `unsafe {}` blocks

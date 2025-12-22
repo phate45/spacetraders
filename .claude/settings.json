@@ -1,12 +1,27 @@
 {
   "hooks": {
-    "UserPromptSubmit": [
+    "PreCompact": [
       {
         "matcher": "",
         "hooks": [
           {
             "type": "command",
-            "command": "echo \"(Temporal grounding: $(date '+%A, %Y-%m-%d %H:%M:%S'))\""
+            "command": "bd prime"
+          }
+        ]
+      }
+    ],
+    "SessionStart": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bd prime"
+          },
+          {
+            "type": "command",
+            "command": "bash $CLAUDE_PROJECT_DIR/.claude/hooks/load-control-tower-context.sh"
           }
         ]
       }
@@ -38,13 +53,28 @@
       "Bash(git add:*)",
       "Bash(git commit:*)",
       "Bash(git restore:*)",
+      "Bash(git status:*)",
+      "Bash(git pull:*)",
+      "Bash(git push)",
+      "Bash(bd:*)",
+      "Bash(bd create:*)",
+      "Bash(bd update:*)",
+      "Bash(bd close:*)",
       "mcp__fetch__fetch",
       "mcp__sequential-thinking__sequentialthinking",
       "WebSearch",
       "WebFetch",
       "Glob",
       "Read(//tmp/**)",
-      "Skill(technical-writing)"
+      "Skill(technical-writing)",
+      "Skill(agent-working)",
+      "Skill(authoring-skills)",
+      "Skill(creating-tasks)",
+      "Skill(discovering-issues)",
+      "Skill(upgrading-beads)",
+      "Skill(landing-the-plane)",
+      "Skill(resolving-jsonl-conflicts)",
+      "Skill(writing-work-logs)"
     ],
     "deny": [],
     "ask": [],
