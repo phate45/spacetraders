@@ -1,3 +1,63 @@
-fn main() {
-    println!("Hello, world!");
+mod agent;
+mod config;
+mod registration;
+
+use agent::fetch_agent;
+use config::Config;
+use registration::register_agent;
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    println!("=== SpaceTraders Client ===\n");
+
+    // Load or create config
+    let mut config = Config::load()?;
+    println!("Config loaded from .spacetraders.toml");
+
+    // Check if we have a token
+    if !config.has_token() {
+        println!("No agent token found. Starting registration process...\n");
+
+        // Read ACCOUNT_TOKEN from environment
+        let account_token = std::env::var("ACCOUNT_TOKEN")
+            .map_err(|_| "ACCOUNT_TOKEN environment variable not set")?;
+
+        // Register with TANDEM_PILOT symbol
+        let agent_symbol = "TANDEM_PILOT";
+        let (token, confirmed_symbol) = register_agent(&account_token, agent_symbol).await?;
+
+        // Store token and symbol in config
+        config.agent_token = Some(token);
+        config.agent_symbol = Some(confirmed_symbol);
+        config.save()?;
+
+        println!("\nAgent token saved to .spacetraders.toml");
+    } else {
+        println!("Agent token found in config");
+        if let Some(symbol) = &config.agent_symbol {
+            println!("Agent symbol: {}", symbol);
+        }
+    }
+
+    println!("\n=== Token Status ===");
+    println!("Token present: {}", config.has_token());
+    if let Some(token) = &config.agent_token {
+        // Display first and last 4 characters for verification
+        if token.len() > 8 {
+            println!("Token: {}...{}", &token[..4], &token[token.len()-4..]);
+        } else {
+            println!("Token: <present>");
+        }
+    }
+
+    // Fetch and display agent information
+    if let Some(token) = &config.agent_token {
+        println!("\nFetching agent information...");
+        match fetch_agent(token).await {
+            Ok(agent) => agent.display(),
+            Err(e) => eprintln!("Error fetching agent: {}", e),
+        }
+    }
+
+    Ok(())
 }
