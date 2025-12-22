@@ -57,6 +57,11 @@ git status  # Should show up to date
 - `rust-implementer` - Rust code implementation (has 2024 edition context)
 - `task-executor` - Non-code tasks (docs, config, research)
 
+**Built-in Agents** (via Task tool `subagent_type`):
+- `Explore` - Codebase exploration and context gathering (use before task creation)
+- `Plan` - Implementation planning
+- `claude-code-guide` - Claude Code documentation lookup
+
 **Delegation Pattern**: Create beads task → Delegate to appropriate agent → Agent reports completion
 
 ## Rust Standards
@@ -68,3 +73,16 @@ git status  # Should show up to date
 ## Project Notes
 
 Research and work logs: `/home/phate/Documents/second-brain/01_Projects/spacetraders/`
+
+Key documents:
+- `Claude Code Configuration Research.md` - Comprehensive reference on agents, output styles, skills, .claude/rules
+- `logs/YYYY-MM-DD.md` - Daily work logs
+
+## Utilities
+
+**Beads installer** (`scripts/install_beads.py`):
+```bash
+python scripts/install_beads.py          # Install or upgrade
+python scripts/install_beads.py --check  # Check if update available
+python scripts/install_beads.py --force  # Force reinstall
+```
