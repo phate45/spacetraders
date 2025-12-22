@@ -44,7 +44,7 @@ The goal is that all work flows through the task graph. Quick fixes become track
 
 **Start**:
 1. `bd ready --json` - see available work
-2. `bd list --status in_progress` - check active work
+2. `bd list --status in_progress --json` - check active work
 3. Report state to partner
 
 **During**:
@@ -57,3 +57,4 @@ The goal is that all work flows through the task graph. Quick fixes become track
 2. Update work log in vault (`logs/YYYY-MM-DD.md`)
 3. `bd sync` - mandatory
 4. Brief summary of session state
+
