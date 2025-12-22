@@ -3,20 +3,28 @@ name: discovering-issues
 description: Log work discovered while working on other tasks. Use when finding bugs, TODOs, or follow-up work during implementation.
 ---
 
-# Discovering Issues
+# Discovering Issues (Side Quest Protocol)
 
-When working on a task, you often discover additional work that needs tracking. Use `discovered-from` to maintain context and audit trail.
+**Invoke this skill when you've identified a side quest during task execution.**
 
-## Command Pattern
+Side quests are work discovered while doing other work. This skill covers the complete capture protocol.
+
+## Quick Capture Pattern
 
 ```bash
-bd create "Discovered issue title" \
+# 1. Create the issue
+bd create --title "Discovered issue title" \
   -t task|bug|feature \
   -p 0-4 \
-  -d "Description including discovery context" \
-  --deps discovered-from:<parent-id> \
+  -d "Description with discovery context" \
+  --deps discovered-from:<current-task-id> \
   --json
+
+# 2. Mark as draft (needs refinement)
+bd update <new-id> --status draft --json
 ```
+
+**Why two steps:** `bd create` doesn't accept `--status`. Draft status signals "captured but not refined"—these issues won't appear in `bd ready` until promoted to `open`.
 
 ## Why `discovered-from` Matters
 
@@ -27,18 +35,28 @@ The `discovered-from` dependency:
 3. **Prevents orphaned tasks** - Maintains relationship to parent work
 4. **Aids prioritization** - Related work stays grouped
 
-## Example
+## Blocker vs Deferrable
 
-While implementing `spacetraders-abc` (user authentication), you discover the token validation doesn't check expiry:
+After capturing, assess immediately:
 
-```bash
-bd create "Auth tokens not validated for expiry" \
-  -t bug \
-  -p 1 \
-  -d "Token validation accepts expired tokens. Security issue. Found while implementing user authentication (spacetraders-abc)." \
-  --deps discovered-from:spacetraders-abc \
-  --json
-```
+| Type | Signal | Action |
+|------|--------|--------|
+| **Deferrable** | Doesn't block current work | Continue current task, side quest queued |
+| **Blocker** | Current task cannot complete without this | Stop. Document blocker. Surface to Control Tower. |
+
+**Critical:** If it's a blocker, do NOT switch tasks yourself. Document and escalate. Control Tower assigns work.
+
+### Blocker signals:
+- Security vulnerability in code you're touching
+- Data loss risk if you proceed
+- Architectural issue that invalidates your approach
+- Missing dependency that prevents completion
+
+### Deferrable signals:
+- Nice-to-have improvement spotted
+- Unrelated bug in nearby code
+- Refactoring opportunity
+- Documentation gap
 
 ## Description Requirements
 
@@ -48,7 +66,32 @@ Discovered issues should include:
 - **Why it matters** - Impact or urgency
 - **Discovery context** - What you were doing when you found it
 
-## Dependencies vs Discovery
+**Example:**
+```bash
+bd create --title "Auth tokens not validated for expiry" \
+  -t bug \
+  -p 1 \
+  -d "Token validation accepts expired tokens. Security issue. Found while implementing user authentication (spacetraders-abc)." \
+  --deps discovered-from:spacetraders-abc \
+  --json
+```
+
+## Update Parent Task Notes
+
+After creating the side quest, update your current task's notes:
+
+```bash
+bd update <current-task-id> --notes "IN_PROGRESS: [current work]
+
+DISCOVERED:
+- [Brief description] (tracked: <new-issue-id>, status: draft|blocker)
+
+NEXT: [what you're doing next]" --json
+```
+
+This creates a breadcrumb trail. When Control Tower reviews your work summary, they'll see what was discovered.
+
+## Dependencies Reference
 
 | Flag | Meaning | Use When |
 |------|---------|----------|
@@ -56,35 +99,65 @@ Discovered issues should include:
 | `--deps blocks:<id>` | This issue blocks another | Creating prerequisite work |
 | `bd dep add <id> <blocks>` | Add dependency after creation | Linking existing issues |
 
-**Dependency direction trap**: See [dependency-direction.md](../shared/dependency-direction.md) for the common cognitive error when adding dependencies.
+**Dependency direction trap**: See [dependency-direction.md](../shared/dependency-direction.md) for the common cognitive error.
+
+## Draft Lifecycle
+
+```
+Agent discovers → Creates issue → Marks draft
+                                      ↓
+Control Tower reviews → Refines (adds design, acceptance-criteria)
+                                      ↓
+                        Promotes to open → Appears in bd ready
+```
+
+Draft issues are intentionally minimal. Refinement happens later with Control Tower, not during task execution.
+
+## Complete Example
+
+Working on `spacetraders-abc`. Discover token expiry bug.
+
+```bash
+# 1. Capture
+bd create --title "Auth tokens not validated for expiry" \
+  -t bug -p 1 \
+  -d "Token validation accepts expired tokens. Security risk. Found during auth implementation." \
+  --deps discovered-from:spacetraders-abc \
+  --json
+# Returns: spacetraders-xyz
+
+# 2. Mark draft
+bd update spacetraders-xyz --status draft --json
+
+# 3. Update parent notes
+bd update spacetraders-abc --notes "IN_PROGRESS: Auth flow implementation
+
+DISCOVERED:
+- Token expiry not validated (tracked: spacetraders-xyz, draft)
+
+NEXT: Continue auth flow, expiry bug is captured" --json
+
+# 4. Assess: Is this a blocker?
+# - Security issue, but current auth work can complete
+# - Expiry validation is separate concern
+# → Deferrable. Continue current work.
+```
 
 ## Verification
 
 After creating:
 
 ```bash
-bd show <new-id>  # Verify discovered-from link appears
-bd show <parent-id>  # Verify parent shows the discovery
+bd show <new-id> --json   # Verify discovered-from link, draft status
+bd show <parent-id> --json # Verify parent notes updated
 ```
 
-## Workflow Context
+## Anti-Patterns
 
-When you discover issues during work, capture the workflow context that would help future sessions understand:
-
-1. **Don't just log the issue** - Include the reasoning and context
-2. **Update parent issue notes** - If the discovery affects the parent work, document it
-
-```bash
-# Update parent issue notes with discovery context
-bd update <parent-id> --notes "IN_PROGRESS: Auth implementation
-
-DISCOVERED:
-- Token validation missing expiry check (tracked: spacetraders-xyz)
-- Will need follow-up after auth flow complete
-
-NEXT: Continue auth flow, expiry bug tracked separately"
-```
-
-The notes field survives context compaction and session boundaries. Write as if explaining to a future agent with zero conversation history.
-
-For comprehensive workflow patterns, see the [beads skill](../beads/SKILL.md).
+| Don't | Do Instead |
+|-------|------------|
+| Create issue and forget to mark draft | Always: create → update --status draft |
+| Skip `discovered-from` | Always link to parent task |
+| Switch to blocker task yourself | Document blocker, surface to Control Tower |
+| Write minimal "fix bug" descriptions | Include what, why, discovery context |
+| Forget to update parent notes | Document discovery in current task |
