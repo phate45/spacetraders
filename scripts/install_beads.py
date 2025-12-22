@@ -6,9 +6,10 @@ Downloads the latest release from GitHub, extracts it, and installs to ~/.local/
 Can also check for updates and upgrade an existing installation.
 
 Usage:
-    python install_beads.py          # Install or upgrade
-    python install_beads.py --check  # Check if update available
-    python install_beads.py --force  # Force reinstall even if up to date
+    python install_beads.py                 # Install or upgrade
+    python install_beads.py --check         # Check if update available
+    python install_beads.py --check --quiet # Output JSON snippet for scripting
+    python install_beads.py --force         # Force reinstall even if up to date
 """
 
 import argparse
@@ -46,9 +47,10 @@ def get_platform() -> str:
     return f"{system}_{arch}"
 
 
-def fetch_latest_release() -> dict:
+def fetch_latest_release(quiet: bool = False) -> dict:
     """Fetch latest release info from GitHub API."""
-    print("Fetching latest release info...")
+    if not quiet:
+        print("Fetching latest release info...")
 
     request = urllib.request.Request(
         GITHUB_API_URL,
@@ -191,39 +193,51 @@ def check_path() -> None:
 def main() -> int:
     parser = argparse.ArgumentParser(description="Install or update beads (bd)")
     parser.add_argument("--check", action="store_true", help="Only check if update available")
+    parser.add_argument("--quiet", action="store_true", help="With --check, output JSON snippet only")
     parser.add_argument("--force", action="store_true", help="Force reinstall even if up to date")
     args = parser.parse_args()
 
-    print("Beads (bd) Installer")
-    print("=" * 40)
+    quiet = args.quiet and args.check
+
+    def log(msg: str) -> None:
+        if not quiet:
+            print(msg)
+
+    log("Beads (bd) Installer")
+    log("=" * 40)
 
     try:
         # Detect platform
         plat = get_platform()
-        print(f"Platform: {plat}")
+        log(f"Platform: {plat}")
 
         # Get current version
         current = get_installed_version()
         if current:
-            print(f"Installed version: {current}")
+            log(f"Installed version: {current}")
         else:
-            print("Not currently installed")
+            log("Not currently installed")
 
         # Fetch latest release
-        release = fetch_latest_release()
+        release = fetch_latest_release(quiet=quiet)
         latest = release["tag_name"]
-        print(f"Latest version: {latest}")
+        log(f"Latest version: {latest}")
 
         # Check if update needed
-        if current == latest and not args.force:
-            print("\nAlready up to date!")
+        update_available = current != latest
+
+        if not update_available and not args.force:
+            log("\nAlready up to date!")
+            if quiet:
+                print('"beads_update_available": false')
             return 0
 
         if args.check:
-            if current and current != latest:
+            if quiet:
+                print(f'"beads_update_available": {str(update_available).lower()}')
+            elif update_available:
                 print(f"\nUpdate available: {current} -> {latest}")
-                return 1  # Non-zero to indicate update available
-            return 0
+            return 1 if update_available else 0
 
         # Find download URL
         archive_name = f"beads_{latest.lstrip('v')}_{plat}.tar.gz"
