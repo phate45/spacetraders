@@ -15,6 +15,8 @@ A SpaceTraders API client and automation project. SpaceTraders is a programmable
 
 This project uses **bd (beads)** for task tracking. Do NOT use markdown TODOs or other tracking.
 
+See also: `AGENTS.md` for detailed session protocol and "landing the plane" checklist.
+
 ### Session Start
 ```bash
 bd ready                    # See available work
