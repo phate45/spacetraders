@@ -36,12 +36,6 @@ Use skills for proper issue creation:
 - `/creating-tasks` - New tasks with good descriptions
 - `/discovering-issues` - Work found during other work
 
-### Session End
-
-**Landing requires Mark in the loop.** Do not unilaterally initiate session-end protocol.
-
-When Mark indicates session is ending, invoke `/landing-the-plane` skill for complete protocol.
-
 ### Priority Scale
 - `0` - Critical (security, data loss)
 - `1` - High (major features, important bugs)
@@ -50,8 +44,6 @@ When Mark indicates session is ending, invoke `/landing-the-plane` skill for com
 - `4` - Backlog
 
 ## Agent Architecture
-
-**Control Tower Mode**: Use `/output-style control-tower` for orchestration mode.
 
 **Available Agents** (in `.claude/agents/`):
 - `rust-implementer` - Rust code implementation (has 2024 edition context)
