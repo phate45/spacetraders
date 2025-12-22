@@ -54,5 +54,6 @@ The goal is that all work flows through the task graph. Quick fixes become track
 
 **End**:
 1. Update notes on all in_progress tasks
-2. `bd sync` - mandatory
-3. Brief summary of session state
+2. Update work log in vault (`logs/YYYY-MM-DD.md`)
+3. `bd sync` - mandatory
+4. Brief summary of session state
