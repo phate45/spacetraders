@@ -7,3 +7,15 @@ CLAUDE.local.md
 .claude/template_info.json
 .claude/vault-integration.md
 
+# spacetraders docs
+
+api-docs/
+
+# env
+
+.envrc
+
+
+# Added by cargo
+
+/target
