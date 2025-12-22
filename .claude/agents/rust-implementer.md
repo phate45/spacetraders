@@ -41,7 +41,15 @@ Key 2024 edition points to remember:
 
 ## Cargo Commands
 
-Run these via Bash:
+Use the `host-executor` MCP server to run cargo commands:
+
+```
+mcp__host-executor__execute_command
+tool: cargo
+args: ["check"]
+```
+
+Available commands:
 - `cargo check` - Quick syntax/type checking
 - `cargo build` - Full build
 - `cargo test` - Run tests

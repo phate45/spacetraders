@@ -15,34 +15,28 @@ A SpaceTraders API client and automation project. SpaceTraders is a programmable
 
 This project uses **bd (beads)** for task tracking. Do NOT use markdown TODOs or other tracking.
 
-See also: `AGENTS.md` for detailed session protocol and "landing the plane" checklist.
+### Quick Reference
 
-### Session Start
 ```bash
-bd ready                    # See available work
+bd ready                    # See available work (unblocked)
 bd list --status in_progress  # Check active work
-bd show <id>                # Read context/notes
+bd show <id>                # View issue details
+bd update <id> --status in_progress  # Claim work
+bd close <id> -r "Reason"   # Complete work
+bd sync                     # Sync with git
 ```
 
-### During Work
-- Always include `--description` when creating issues
-- Use `--deps discovered-from:<id>` when finding work during other work
-- Update status: `bd update <id> --status in_progress`
+### Creating Issues
 
-### Session End (Landing the Plane)
-```bash
-# 1. Create issues for remaining work
-bd create "Title" -t task -p 2 -d "Description"
+Use skills for proper issue creation:
+- `/creating-tasks` - New tasks with good descriptions
+- `/discovering-issues` - Work found during other work
 
-# 2. Update/close issues
-bd close <id> -r "Completed"
+### Session End
 
-# 3. Sync to git (MANDATORY)
-bd sync
+**Landing requires Mark in the loop.** Do not unilaterally initiate session-end protocol.
 
-# 4. Verify
-git status  # Should show up to date
-```
+When Mark indicates session is ending, invoke `/landing-the-plane` skill for complete protocol.
 
 ### Priority Scale
 - `0` - Critical (security, data loss)
