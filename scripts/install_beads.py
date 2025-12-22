@@ -78,12 +78,10 @@ def get_installed_version() -> str | None:
             timeout=5
         )
         if result.returncode == 0:
-            # Parse version from output like "bd version v1.2.3"
+            # Parse version from output like "bd version 1.2.3"
             output = result.stdout.strip()
-            for part in output.split():
-                if part.startswith("v"):
-                    return part
-            return output  # Return full output if can't parse
+            import re
+            return "v" + re.match(r"bd version ([\d.]+).*", output).groups()[0]
         return None
     except (subprocess.TimeoutExpired, FileNotFoundError, PermissionError):
         return None

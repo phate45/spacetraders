@@ -115,13 +115,13 @@ For detailed integration patterns, see [BOUNDARIES.md](../beads/references/BOUND
 - Architectural issue surfaces
 - Refactoring opportunity identified
 
-**Response:**
-1. Create issue: `bd create "Side quest title" -t task -d "Context" --deps discovered-from:<current-task> --json`
-2. Assess: **Blocker** or **deferrable**?
-3. If deferrable: Continue current work, side quest is queued
-4. If blocker: **Do NOT switch tasks yourself.** Document the blocker in your current task's notes, then surface to Control Tower immediately. Control Tower assigns work—you don't reassign yourself.
+**When you hit a trigger:** Invoke `/discovering-issues` for the complete capture protocol.
 
-For full side quest workflow, see [WORKFLOWS.md](../beads/references/WORKFLOWS.md#side-quests).
+The skill covers:
+- Two-step capture pattern (create → mark draft)
+- Blocker vs deferrable assessment
+- Parent task notes update
+- Escalation rules
 
 ## Notes Format Reference
 
@@ -175,7 +175,7 @@ Surface to Control Tower immediately:
 ```
 - [ ] Update notes at milestones
 - [ ] Mark acceptance criteria [x] as completed
-- [ ] Track side quests with discovered-from
+- [ ] Handle side quests via /discovering-issues
 - [ ] Escalate blockers immediately (don't switch tasks)
 ```
 
@@ -196,7 +196,7 @@ For comprehensive checklists, see [WORKFLOWS.md](../beads/references/WORKFLOWS.m
 | Work from conversation context alone | Read `bd show <task-id> --json` first |
 | Update notes only at end | Update at milestones |
 | Write vague notes ("made progress") | Write specific notes ("Implemented X, Y remains") |
-| Ignore side quests | Track with discovered-from |
+| Ignore side quests | Invoke /discovering-issues |
 | Switch to blocker task yourself | Document blocker, surface to Control Tower |
 | Leave acceptance criteria unchecked | Mark `[x]` as each criterion is met |
 | Guess at architectural decisions | Escalate to Control Tower |

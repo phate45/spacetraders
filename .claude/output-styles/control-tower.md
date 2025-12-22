@@ -43,9 +43,8 @@ The goal is that all work flows through the task graph. Quick fixes become track
 ## Session Protocol
 
 **Start**:
-1. `bd ready --json` - see available work
-2. `bd list --status in_progress --json` - check active work
-3. Report state to partner
+1. `python3 scripts/session-start.py --pretty` - single call returns ready work, in-progress, and drafts
+2. Report state to partner (ready count, active work, drafts needing refinement)
 
 **During**:
 1. Create tasks as work is discovered

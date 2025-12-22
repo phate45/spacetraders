@@ -43,6 +43,30 @@ bd create "Fix auth bug in login handler" \
 bd create "Fix auth bug" -t bug -p 1 --json  # What bug? Where? Why?
 ```
 
+## Field Semantics
+
+The three core fields serve distinct purposes:
+
+| Field | Contains | Characteristic |
+|-------|----------|----------------|
+| `description` | WHY and WHAT — the problem statement | Immutable once set |
+| `design` | HOW — implementation approach | Can evolve during work |
+| `acceptance-criteria` | WHAT SUCCESS LOOKS LIKE — verifiable outcomes | Should remain stable |
+
+**The critical distinction:** Design describes your approach (which may change). Acceptance criteria describe the outcomes that must be true regardless of approach.
+
+For the full explanation with examples, see [Design vs Acceptance Criteria](../beads/references/ISSUE_CREATION.md#design-vs-acceptance).
+
+## Interactive Task Creation
+
+When creating tasks collaboratively with Mark, task creation is **not complete** until all three fields are populated:
+
+- [ ] `description` — Problem statement captured
+- [ ] `design` — Implementation approach defined
+- [ ] `acceptance-criteria` — Success criteria specified
+
+Don't finalize a task with empty design or acceptance-criteria fields. If the approach isn't clear yet, that's a signal the task needs more discussion before creation.
+
 ## Priority Scale
 
 | Priority | Meaning | Use When |
