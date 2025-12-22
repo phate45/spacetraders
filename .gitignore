@@ -15,6 +15,9 @@ api-docs/
 
 .envrc
 
+# spacetraders config (contains API tokens)
+.spacetraders.toml
+
 
 # Added by cargo
 
