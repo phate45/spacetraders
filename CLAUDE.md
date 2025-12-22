@@ -1,6 +1,6 @@
 # spacetraders
 
-@/home/phate/BigProjects/spacetraders/CLAUDE.local.md
+@CLAUDE.local.md
 
 ## Project Overview
 
@@ -59,16 +59,7 @@ Use skills for proper issue creation:
 ## Rust Standards
 
 - Edition 2024 (`edition = "2024"` in Cargo.toml)
-- Reference: `~/Documents/second-brain/03_Resources/Programming/Rust/Rust 2024 Edition Reference.md`
 - Run `cargo check`, `cargo test`, `cargo clippy` before commits
-
-## Project Notes
-
-Research and work logs: `/home/phate/Documents/second-brain/01_Projects/spacetraders/`
-
-Key documents:
-- `Claude Code Configuration Research.md` - Comprehensive reference on agents, output styles, skills, .claude/rules
-- `logs/YYYY-MM-DD.md` - Daily work logs
 
 ## Utilities
 

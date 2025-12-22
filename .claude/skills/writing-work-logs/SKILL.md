@@ -9,11 +9,7 @@ Control Tower responsibility: synthesize task-level work into coherent session n
 
 ## Location
 
-Work logs live in Mark's vault:
-
-```
-/home/phate/Documents/second-brain/01_Projects/spacetraders/logs/YYYY-MM-DD.md
-```
+Work logs live in the project's vault notes directory under `logs/YYYY-MM-DD.md`.
 
 ## Before Writing
 
