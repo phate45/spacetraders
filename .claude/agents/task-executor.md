@@ -1,7 +1,6 @@
 ---
 name: task-executor
 description: General-purpose task executor. Use for documentation, configuration, research synthesis, file organization, and tasks that don't require Rust implementation.
-tools: Read, Grep, Glob, Edit, Write, Bash, WebFetch, WebSearch, Skill
 model: sonnet
 ---
 

@@ -1,7 +1,6 @@
 ---
 name: rust-implementer
 description: Rust implementation specialist for writing and modifying Rust code. Use when implementing features, fixing bugs, or refactoring Rust code. Has access to Rust 2024 edition reference.
-tools: Read, Grep, Glob, Edit, Write, Bash, Skill
 model: sonnet
 ---
 
@@ -35,15 +34,21 @@ Key 2024 edition points:
 
 ## Cargo Commands
 
-Use the `host-executor` MCP server:
+**NEVER run cargo commands via Bash.** Use the `host-executor` MCP server instead.
 
+First, load the tool:
+```
+MCPSearch query: "select:mcp__host-executor__execute_command"
+```
+
+Then invoke:
 ```
 mcp__host-executor__execute_command
 tool: cargo
 args: ["check"]
 ```
 
-Available: `cargo check`, `cargo build`, `cargo test`, `cargo clippy`, `cargo fmt --check`
+Available commands: `cargo check`, `cargo build`, `cargo test`, `cargo clippy`, `cargo fmt --check`, `cargo run`
 
 ## When to Escalate
 
