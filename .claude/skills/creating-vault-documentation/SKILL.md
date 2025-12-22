@@ -116,4 +116,4 @@ Created vault documentation:
 
 ## Reference
 
-For comprehensive vault integration guidelines, see [vault-integration.md](../../../vault-integration.md) in the project root.
+For comprehensive vault integration guidelines, see [vault-integration.md](../../vault-integration.md).
