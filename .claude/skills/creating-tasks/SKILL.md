@@ -72,6 +72,33 @@ bd dep add <new-id> <blocking-id>
 | `bug` | Something is broken |
 | `feature` | New capability |
 
+## Notes Field for Complex Issues
+
+For issues that may span sessions or require detailed context, use the notes field:
+
+```bash
+bd update <id> --notes "IMPLEMENTATION GUIDE
+
+APPROACH:
+[Chosen approach and why]
+
+KEY_DECISIONS:
+[User input, architectural choices]
+
+NEXT:
+[Concrete next step for resumption]"
+```
+
+The notes field persists across sessions and survives context compaction. Write notes as if explaining to a future agent with zero conversation history.
+
+**When to use notes:**
+- Multi-session work
+- Complex technical implementation
+- Research findings that inform approach
+- User decisions that affect design
+
+For comprehensive notes patterns and resumability guidelines, see the [beads skill](../beads/SKILL.md).
+
 ## Verification
 
 After creating:

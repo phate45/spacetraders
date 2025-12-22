@@ -66,3 +66,25 @@ After creating:
 bd show <new-id>  # Verify discovered-from link appears
 bd show <parent-id>  # Verify parent shows the discovery
 ```
+
+## Workflow Context
+
+When you discover issues during work, capture the workflow context that would help future sessions understand:
+
+1. **Don't just log the issue** - Include the reasoning and context
+2. **Update parent issue notes** - If the discovery affects the parent work, document it
+
+```bash
+# Update parent issue notes with discovery context
+bd update <parent-id> --notes "IN_PROGRESS: Auth implementation
+
+DISCOVERED:
+- Token validation missing expiry check (tracked: spacetraders-xyz)
+- Will need follow-up after auth flow complete
+
+NEXT: Continue auth flow, expiry bug tracked separately"
+```
+
+The notes field survives context compaction and session boundaries. Write as if explaining to a future agent with zero conversation history.
+
+For comprehensive workflow patterns, see the [beads skill](../beads/SKILL.md).

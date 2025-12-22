@@ -44,6 +44,22 @@ bd close <id1> <id2> ... -r "Completed"  # Batch close finished work
 bd update <id> --status in_progress      # Update work still active
 ```
 
+**For in-progress work, update notes for session handoff:**
+
+```bash
+bd update <id> --notes "COMPLETED: [Specific deliverables done]
+
+IN_PROGRESS: [Current state, what's partially done]
+
+NEXT: [Concrete next step - not vague]
+
+BLOCKERS: [What's preventing progress, if any]
+
+KEY_DECISIONS: [Important user guidance or choices made]"
+```
+
+Notes survive context compaction. Write as if explaining to a future agent with zero conversation history.
+
 ### 4. Push to Remote (MANDATORY)
 
 ```bash
@@ -83,6 +99,10 @@ Provide context for next session:
 - What was completed
 - What's in progress
 - Any blockers or decisions needed
+
+The notes field (step 3) is the **primary handoff mechanism**. Conversation history disappears at session end; notes persist. Write notes as the canonical source of truth for session resumption.
+
+For comprehensive notes patterns and resumability guidelines, see the [beads skill](../beads/SKILL.md).
 
 ## Anti-Patterns
 

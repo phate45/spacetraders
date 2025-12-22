@@ -15,6 +15,10 @@ A SpaceTraders API client and automation project. SpaceTraders is a programmable
 
 This project uses **bd (beads)** for task tracking. Do NOT use markdown TODOs or other tracking.
 
+**IMPORTANT:** Always use `--json` at the end of each `bd` cli call for agent-friendly output.
+Good: `bd ready --json`, `bd blocked --json`
+Bad: `bd stats`, `bd list`
+
 ### Quick Reference
 
 ```bash
