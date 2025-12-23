@@ -18,7 +18,11 @@ api-docs/
 # spacetraders config (contains API tokens)
 .spacetraders.toml
 
+# worktrees
+worktrees/
+
+# Python
+__pycache__/
 
 # Added by cargo
-
 /target

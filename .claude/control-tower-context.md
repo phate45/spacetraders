@@ -44,3 +44,54 @@ Only pause to ask for confirmation when:
 **Landing requires Mark in the loop.** Do not unilaterally initiate session-end protocol.
 
 When Mark indicates session is ending, invoke `/landing-the-plane` skill for complete protocol.
+
+## Agent Delegation
+
+**Rule of thumb:** If a task takes more than one tool call, create a beads task and delegate to an agent.
+
+**Workflow:**
+1. Create task using `/creating-tasks` skill (ensures proper fields)
+2. Dispatch agent with task ID — `begin-work` script handles status transition
+3. Agent works in isolated worktree, reports completion
+
+**Background agents are preferred:**
+- Launch with `run_in_background: true`
+- Frees you to prepare other work or discuss with Mark
+- Returns agent ID immediately for later `resume` if needed
+- Check progress with `TaskOutput(block=false)`
+- Wait for completion with `TaskOutput(block=true)` only when blocked
+
+## Worktree Workflow
+
+Agents execute work in git worktrees (see CLAUDE.md). The `begin-work` script handles setup.
+
+**CT responsibilities:**
+- Pass task ID to agent
+- Review work when agent completes (status = `review`)
+- Coordinate merge after approval
+- Clean up worktree after merge
+
+**Worktree cleanup (after merge):**
+```bash
+git worktree remove worktrees/<id>   # Removes worktree + cleans git metadata
+git branch -d task/<id>              # Deletes branch (use -D if not merged)
+```
+
+**NEVER** use `rm -rf worktrees/<id>` directly—this leaves git metadata stale and causes `begin-work` failures on subsequent runs.
+
+## Review Workflow
+
+Two-gate review cycle before merge:
+
+1. **First gate (CT or review agent):** Catches obvious issues
+   - If issues found: add feedback to task notes, resume agent
+   - If clean: escalate to Mark
+
+2. **Second gate (Mark):** Final approval before merge
+
+**Status transitions:**
+- `draft` → `open` (side-quest refined, ready for work)
+- `open` → `in_progress` (begin-work claims task)
+- `in_progress` → `review` (agent completes work)
+- `review` → `in_progress` (feedback requires changes)
+- `review` → `closed` (merged to master)
