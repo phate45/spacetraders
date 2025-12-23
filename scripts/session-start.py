@@ -5,6 +5,7 @@ Session start script for Control Tower.
 Gathers session state in a single invocation:
 - Ready work (unblocked, not in progress)
 - In-progress work (currently claimed)
+- Review work (awaiting review)
 - Draft issues (need refinement)
 - Beads update availability
 
@@ -65,6 +66,7 @@ def main() -> None:
     session_state = {
         "ready": run_bd(["ready"]),
         "in_progress": run_bd(["list", "--status", "in_progress"]),
+        "review": run_bd(["list", "--status", "review"]),
         "drafts": run_bd(["list", "--status", "draft"]),
     }
 
@@ -75,6 +77,7 @@ def main() -> None:
     session_state["summary"] = {
         "ready_count": len(session_state["ready"]),
         "in_progress_count": len(session_state["in_progress"]),
+        "review_count": len(session_state["review"]),
         "draft_count": len(session_state["drafts"]),
         "beads_update_available": beads_update,
     }

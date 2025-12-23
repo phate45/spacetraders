@@ -11,17 +11,77 @@ This skill provides the shared workflow pattern for all agents executing beads t
 
 ## Core Workflow
 
-### 1. Receive Task ID
+### 1. Initialize Workspace
 
-You receive a **beads task ID**, not a description. The task ID is your source of truth.
-
-### 2. Read Task Context
+Use the Bash tool to run `begin-work`:
 
 ```bash
-bd show <task-id> --json
+Bash(begin-work <task-id>)
 ```
 
-**Read in this order:**
+This command:
+- Fetches task info from beads
+- Creates worktree + branch if new task, or detects existing for resume
+- Sets task status to `in_progress`
+- Outputs JSON with everything you need
+
+**Output structure:**
+```json
+{
+  "task": { "id", "title", "description", "design", "acceptance_criteria", "notes" },
+  "workspace": { "worktree_path", "worktree_name", "branch_name" },
+  "mode": "new" | "resume"
+}
+```
+
+**If the script errors:** Stop and surface the issue to Control Tower. Do not proceed.
+
+**CRITICAL — What NOT to do:**
+
+`begin-work` is a symlinked shell command, NOT a Python script you invoke directly.
+
+| ❌ WRONG | Why |
+|----------|-----|
+| `python scripts/begin-work.py` | Never call Python directly |
+| `python /path/to/begin-work.py` | The symlink exists for a reason |
+| `mcp__host-executor__execute_command` with begin-work | It's a shell command, not a heavy tool |
+| Manual worktree creation | Results in wrong naming conventions. Every time. |
+
+Seeing `scripts/begin-work.py` in the codebase does NOT mean you should call Python. The source file's presence is irrelevant. Use the shell command.
+
+**If Bash permission is denied:** STOP. Report to Control Tower. Do NOT improvise workarounds.
+
+### 2. Enter Worktree
+
+```bash
+cd <worktree_path> && pwd
+```
+
+Verify `pwd` shows `<repo>/worktrees/<id>` before proceeding. All work happens in this directory.
+
+**Tool usage in worktree:**
+- **Shell tools** (rg, git, etc.): Use relative paths from working directory
+- **Heavy tools** (cargo, bun): Use `execute_command(..., worktree=<worktree_name>)`
+- **bd**: Run directly, no `cd` prefix needed—bd finds `.beads/` root automatically
+
+**MANDATORY for Read/Edit tools:** File paths MUST include the worktree path.
+
+```
+# ✅ Correct - includes worktree path
+Read("/home/.../worktrees/935/README.md")
+Edit("/home/.../worktrees/935/src/main.rs", ...)
+
+# ❌ WRONG - points to main repo, NOT the worktree
+Read("/home/.../spacetraders/README.md")
+Edit("/home/.../spacetraders/src/main.rs", ...)
+```
+
+After `cd <worktree>`, your shell working directory changes but Read/Edit still need full paths. Use the `worktree_path` from `begin-work` output.
+
+### 3. Read Task Context
+
+From the `begin-work` output:
+
 1. **Notes field** - Session handoff context (start here if populated)
 2. **Acceptance criteria** - Definition of done (your checklist)
 3. **Design field** - Implementation approach
@@ -37,7 +97,7 @@ rg "^#+" <path-to-document> -n  # Get headings with line numbers
 
 Then use Read tool with `offset` parameter to load only relevant sections, saving context.
 
-### 3. Execute Work
+### 4. Execute Work
 
 Work systematically. **Update notes at milestones:**
 
@@ -57,7 +117,7 @@ BLOCKERS: [if any]" --json
 - When hitting blockers
 - Discovering side quests
 
-### 4. Update Acceptance Criteria
+### 5. Update Acceptance Criteria
 
 Mark criteria as complete when verified:
 
@@ -69,15 +129,25 @@ bd update <task-id> --acceptance "- [x] First criterion (done)
 
 Update acceptance criteria as you complete each item, not just at the end.
 
-### 5. Close Task
+### 6. Submit for Review
+
+When work is complete:
 
 ```bash
-bd close <task-id> -r "Brief summary" --json
+bd update <task-id> --status review --json
 ```
 
-The close reason is a label. Main context lives in the final notes update.
+**Do NOT use `bd close`.** Closing happens after Control Tower review and merge.
 
-### 6. Report to Control Tower
+Commit your work before submitting:
+
+```bash
+git add -A && git commit -m "<type>(<id>): <summary>"
+```
+
+Example: `git commit -m "task(q4x): implement begin-work script"`
+
+### 7. Report to Control Tower
 
 Your response must include:
 1. **Deliverables** - What was created/modified
@@ -164,7 +234,8 @@ Surface to Control Tower immediately:
 
 **Starting work:**
 ```
-- [ ] bd show <task-id> --json
+- [ ] begin-work <task-id>
+- [ ] cd <worktree_path> && pwd (verify location)
 - [ ] Read notes field first
 - [ ] Review acceptance criteria
 - [ ] Create TodoWrite from criteria
@@ -177,13 +248,15 @@ Surface to Control Tower immediately:
 - [ ] Mark acceptance criteria [x] as completed
 - [ ] Handle side quests via /discovering-issues
 - [ ] Escalate blockers immediately (don't switch tasks)
+- [ ] Commit at appropriate granularity
 ```
 
 **Completing work:**
 ```
 - [ ] Final notes update
 - [ ] All acceptance criteria marked [x]
-- [ ] bd close <task-id> -r "Summary" --json
+- [ ] git add -A && git commit -m "..."
+- [ ] bd update <task-id> --status review --json
 - [ ] Report deliverables to Control Tower
 ```
 
@@ -193,10 +266,14 @@ For comprehensive checklists, see [WORKFLOWS.md](../beads/references/WORKFLOWS.m
 
 | Don't | Do Instead |
 |-------|------------|
-| Work from conversation context alone | Read `bd show <task-id> --json` first |
+| Skip `begin-work` and call `bd show` directly | Always run `begin-work <task-id>` first |
+| Work outside the worktree | Verify `pwd` shows worktrees path before starting |
+| Read/Edit main repo paths (`/repo/file.rs`) | Use worktree paths (`/repo/worktrees/<id>/file.rs`) |
+| Use `bd close` to finish | Use `bd update --status review` |
 | Update notes only at end | Update at milestones |
 | Write vague notes ("made progress") | Write specific notes ("Implemented X, Y remains") |
 | Ignore side quests | Invoke /discovering-issues |
 | Switch to blocker task yourself | Document blocker, surface to Control Tower |
 | Leave acceptance criteria unchecked | Mark `[x]` as each criterion is met |
 | Guess at architectural decisions | Escalate to Control Tower |
+| Continue after `begin-work` errors | Stop and surface issue to Control Tower |
