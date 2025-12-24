@@ -2,6 +2,12 @@
 
 A Rust client for the [SpaceTraders](https://spacetraders.io) API—a programmable fleet-management game played entirely through REST endpoints.
 
+```
+Stars guide cargo ships
+Through the cosmic trade routes vast
+Wealth among the void
+```
+
 ## Current Status
 
 **Early development.** The client handles agent registration and token lifecycle:
