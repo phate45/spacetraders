@@ -17,21 +17,21 @@ SAFE_PATTERNS = [
     r"^bd\s+",                    # All bd commands
     r"^begin-work\s+",            # Worktree initialization
 
-    # Git read operations
-    r"^git\s+status",
-    r"^git\s+log",
-    r"^git\s+branch",
-    r"^git\s+diff",
-    r"^git\s+show",
-    r"^git\s+ls-tree",
-    r"^git\s+check-ignore",
+    # Git read operations (with optional -C worktrees/<id>)
+    r"^git\s+(-C\s+worktrees/\w+\s+)?status",
+    r"^git\s+(-C\s+worktrees/\w+\s+)?log",
+    r"^git\s+(-C\s+worktrees/\w+\s+)?branch",
+    r"^git\s+(-C\s+worktrees/\w+\s+)?diff",
+    r"^git\s+(-C\s+worktrees/\w+\s+)?show",
+    r"^git\s+(-C\s+worktrees/\w+\s+)?ls-tree",
+    r"^git\s+(-C\s+worktrees/\w+\s+)?check-ignore",
 
-    # Git write operations (already in allow-list)
-    r"^git\s+add",
-    r"^git\s+commit",
-    r"^git\s+restore",
-    r"^git\s+pull",
-    r"^git\s+push$",              # Exact match, no force flags
+    # Git write operations (with optional -C worktrees/<id>)
+    r"^git\s+(-C\s+worktrees/\w+\s+)?add",
+    r"^git\s+(-C\s+worktrees/\w+\s+)?commit",
+    r"^git\s+(-C\s+worktrees/\w+\s+)?restore",
+    r"^git\s+(-C\s+worktrees/\w+\s+)?pull",
+    r"^git\s+(-C\s+worktrees/\w+\s+)?push$",  # Exact match, no force flags
     r"^git\s+worktree",
 
     # Safe shell commands
