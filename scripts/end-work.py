@@ -15,11 +15,14 @@ Output JSON on success:
             "title": "..."
         },
         "operations": {
+            "pulled": true,
             "rebased": true,
             "merged": true,
             "worktree_removed": true,
             "branch_deleted": true,
-            "task_closed": true
+            "task_closed": true,
+            "synced": true,
+            "pushed": true
         }
     }
 
@@ -160,6 +163,26 @@ def validate_no_uncommitted_changes(worktree_path: Path) -> None:
         )
 
 
+def pull_master(project_root: Path) -> None:
+    """
+    Pull latest master from remote with rebase.
+
+    Args:
+        project_root: Project root directory
+    """
+    # Ensure we're on master
+    run_command(
+        ["git", "checkout", "master"],
+        cwd=project_root
+    )
+
+    # Pull with rebase to update local master
+    run_command(
+        ["git", "pull", "--rebase"],
+        cwd=project_root
+    )
+
+
 def rebase_onto_master(worktree_path: Path) -> tuple[bool, list[str]]:
     """
     Rebase worktree branch onto master.
@@ -271,6 +294,24 @@ def close_task(task_id: str) -> None:
     run_command(["bd", "close", task_id, "-r", "Merged to master", "--json"])
 
 
+def sync_beads() -> None:
+    """Sync beads changes to git."""
+    run_command(["bd", "sync", "--json"])
+
+
+def push_changes(project_root: Path) -> None:
+    """
+    Push changes to remote.
+
+    Args:
+        project_root: Project root directory
+    """
+    run_command(
+        ["git", "push"],
+        cwd=project_root
+    )
+
+
 def main():
     parser = argparse.ArgumentParser(
         description="Merge completed task with rebase workflow"
@@ -301,6 +342,9 @@ def main():
     # Get branch name before we start operations
     branch_name = get_branch_name(worktree_path)
 
+    # Pull latest master from remote
+    pull_master(project_root)
+
     # Rebase onto master
     rebase_success, conflicting_files = rebase_onto_master(worktree_path)
 
@@ -323,6 +367,8 @@ def main():
     remove_worktree(worktree_path)
     delete_branch(branch_name)
     close_task(full_id)
+    sync_beads()
+    push_changes(project_root)
 
     # Output success JSON
     success_output = {
@@ -332,11 +378,14 @@ def main():
             "title": task["title"]
         },
         "operations": {
+            "pulled": True,
             "rebased": True,
             "merged": True,
             "worktree_removed": True,
             "branch_deleted": True,
-            "task_closed": True
+            "task_closed": True,
+            "synced": True,
+            "pushed": True
         }
     }
     print(json.dumps(success_output, indent=2))
