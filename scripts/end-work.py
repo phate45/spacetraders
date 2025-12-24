@@ -299,6 +299,49 @@ def sync_beads() -> None:
     run_command(["bd", "sync", "--json"])
 
 
+def handle_uncommitted_changes(project_root: Path) -> bool:
+    """
+    Check for uncommitted changes in project root and handle beads-only changes.
+
+    If only .beads/ files are changed, auto-sync them.
+    If other files are changed, exit with error.
+
+    Args:
+        project_root: Project root directory
+
+    Returns:
+        True if beads were synced, False if no changes
+    """
+    result = run_command(
+        ["git", "status", "--porcelain"],
+        cwd=project_root,
+        check=False
+    )
+
+    if not result.stdout.strip():
+        return False  # No changes
+
+    changed_files = result.stdout.strip().split("\n")
+
+    # Check if all changes are in .beads/
+    non_beads_changes = [
+        f for f in changed_files
+        if not f.strip().endswith(".beads/interactions.jsonl")
+        and not f.strip().split()[-1].startswith(".beads/")
+    ]
+
+    if non_beads_changes:
+        error_exit(
+            "Uncommitted changes in project root (non-beads files)",
+            f"Commit or stash these changes before running end-work:\n" +
+            "\n".join(non_beads_changes)
+        )
+
+    # Only beads changes - auto-sync
+    sync_beads()
+    return True
+
+
 def push_changes(project_root: Path) -> None:
     """
     Push changes to remote.
@@ -341,6 +384,9 @@ def main():
 
     # Get branch name before we start operations
     branch_name = get_branch_name(worktree_path)
+
+    # Handle any uncommitted beads changes before pull
+    handle_uncommitted_changes(project_root)
 
     # Pull latest master from remote
     pull_master(project_root)
