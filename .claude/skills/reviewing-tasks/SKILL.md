@@ -1,19 +1,25 @@
 ---
 name: reviewing-tasks
-description: First-gate review of completed agent work. Use when a task reaches 'review' status to verify acceptance criteria, deliverable quality, and worktree hygiene before escalating to Mark for final approval.
+description: Control Tower self-review of completed agent work. Use when reviewing a task yourself (without delegating to code-reviewer agent) to verify acceptance criteria, deliverable quality, and worktree hygiene before escalating to Mark.
 ---
 
 <objective>
-Review completed agent work systematically before escalating to Mark. This is the first gate in a two-gate review process—catch obvious issues early so Mark's review focuses on judgment calls rather than mechanical checks.
+Review completed agent work systematically before escalating to Mark. This is for when you (Control Tower) perform the first-gate review yourself rather than delegating to the code-reviewer agent.
+
+For delegated reviews, use `/agent-reviewing` skill via the code-reviewer agent instead.
 </objective>
 
 <quick_start>
 For task in `review` status:
 
 ```bash
-bd show <id> --json           # Get task details + acceptance criteria + notes
-git -C worktrees/<id> log --oneline master..HEAD   # Check commits
-git -C worktrees/<id> status  # Check for uncommitted changes
+# Get specific fields (bd show returns array, use .[0])
+bd show <id> --json | jq '.[0] | {acceptance_criteria, notes, design}'
+
+# Check worktree state (use -C since you're in project root)
+git -C worktrees/<id> log --oneline master..HEAD
+git -C worktrees/<id> status
+git -C worktrees/<id> diff master..HEAD --stat
 ```
 
 Then verify each acceptance criterion has evidence, not just claims.
@@ -30,12 +36,14 @@ Then verify each acceptance criterion has evidence, not just claims.
 <process>
 **1. Load Context**
 
-Read task details:
+Read task details (note: `bd show` returns an array):
 ```bash
-bd show <id> --json
+bd show <id> --json | jq '.[0] | {acceptance_criteria, notes, design}'
 ```
 
-Extract from output:
+Without `.[0]`, jq errors with "Cannot index array with string".
+
+Extract:
 - `acceptance_criteria` — What success looks like
 - `notes` — Agent's COMPLETED/CRITERIA sections
 - `design` — Intended approach
