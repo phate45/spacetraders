@@ -22,7 +22,12 @@ Output JSON:
             "worktree_name": "xyz",
             "branch_name": "task/xyz"
         },
-        "mode": "new" | "resume"
+        "mode": "new" | "resume",
+        "resume_context": {  // Only present when mode="resume"
+            "commits": ["abc123 commit title", ...],  // git log --oneline master..HEAD
+            "uncommitted_changes": ["M file.rs", ...],  // git status --short
+            "notes_sections": ["COMPLETED", "IN_PROGRESS", ...]  // Known sections found in notes
+        }
     }
 
 Exit codes:
@@ -146,6 +151,66 @@ def create_worktree(worktree_path: Path, branch_name: str) -> None:
 def set_task_in_progress(task_id: str) -> None:
     """Set task status to in_progress to claim work."""
     run_command(["bd", "update", task_id, "--status", "in_progress"])
+
+
+def get_resume_context(worktree_path: Path, task: dict) -> dict:
+    """
+    Gather context for resume mode to help agent understand current state.
+
+    Returns dict with:
+        - commits: list of commit titles on the branch (git log --oneline)
+        - uncommitted_changes: list of changed files (git status --short)
+        - notes_sections: list of known sections present in notes field
+    """
+    context = {
+        "commits": [],
+        "uncommitted_changes": [],
+        "notes_sections": []
+    }
+
+    # Get recent commits on branch (relative to master)
+    try:
+        result = subprocess.run(
+            ["git", "-C", str(worktree_path), "log", "--oneline", "master..HEAD"],
+            capture_output=True,
+            text=True,
+            check=False
+        )
+        if result.returncode == 0 and result.stdout.strip():
+            context["commits"] = result.stdout.strip().split("\n")
+    except Exception:
+        pass
+
+    # Get uncommitted changes
+    try:
+        result = subprocess.run(
+            ["git", "-C", str(worktree_path), "status", "--short"],
+            capture_output=True,
+            text=True,
+            check=False
+        )
+        if result.returncode == 0 and result.stdout.strip():
+            context["uncommitted_changes"] = result.stdout.strip().split("\n")
+    except Exception:
+        pass
+
+    # Check for known sections in notes field
+    notes = task.get("notes", "")
+    known_sections = [
+        "COMPLETED",
+        "IN_PROGRESS",
+        "NEXT",
+        "BLOCKERS",
+        "KEY_DECISIONS",
+        "CRITERIA",
+        "VAULT_DOCS",
+        "DISCOVERED"
+    ]
+    for section in known_sections:
+        if f"{section}:" in notes:
+            context["notes_sections"].append(section)
+
+    return context
 
 
 def determine_mode(task: dict, worktree_exists: bool) -> str:
@@ -273,6 +338,10 @@ def main():
         },
         "mode": mode
     }
+
+    # Add resume context for resume mode
+    if mode == "resume":
+        output["resume_context"] = get_resume_context(worktree_path, task)
 
     # Output JSON to stdout
     print(json.dumps(output, indent=2))

@@ -17,6 +17,8 @@ A SpaceTraders API client and automation project. SpaceTraders is a programmable
 
 Do NOT use defensive patterns like `git -C /path` or `cd /path && git ...`—these break permission matching and trigger unnecessary approval prompts. Every time.
 
+**Scripts restriction:** Do NOT execute scripts in `scripts/` without explicit direction from Mark or a skill. These are project utilities that require intentional invocation.
+
 ```bash
 # ✅ Correct - verify first, then run
 pwd
@@ -57,31 +59,10 @@ bd close <id> -r "Reason"   # Complete work
 bd sync                     # Sync with git
 ```
 
-### Creating Issues
+### Discovering Work
 
-Use skills for proper issue creation:
-- `/creating-tasks` - New tasks with good descriptions
-- `/discovering-issues` - Work found during other work
-
-### Priority Scale
-- `0` - Critical (security, data loss)
-- `1` - High (major features, important bugs)
-- `2` - Medium (default)
-- `3` - Low (polish)
-- `4` - Backlog
-
-## Agent Architecture
-
-**Available Agents** (in `.claude/agents/`):
-- `rust-implementer` - Rust code implementation (has 2024 edition context)
-- `task-executor` - Non-code tasks (docs, config, research)
-
-**Built-in Agents** (via Task tool `subagent_type`):
-- `Explore` - Codebase exploration and context gathering (use before task creation)
-- `Plan` - Implementation planning
-- `claude-code-guide` - Claude Code documentation lookup
-
-**Delegation Pattern**: Create beads task → Delegate to appropriate agent → Agent reports completion
+If you find bugs, TODOs, or follow-up work while implementing, use:
+- `/discovering-issues` - Creates draft tasks for later refinement
 
 ## Worktrees
 
@@ -106,16 +87,10 @@ worktree: "q4x"  # Optional: run in worktree
 - Python scripts → Use Bash tool
 - `begin-work` → Use Bash tool
 
-## Rust Standards
+## Agent Workflow
 
-- Edition 2024 (`edition = "2024"` in Cargo.toml)
-- Run `cargo check`, `cargo test`, `cargo clippy` before commits
+If you are an agent working on a task:
 
-## Utilities
-
-**Beads installer** (`scripts/install_beads.py`):
-```bash
-python scripts/install_beads.py          # Install or upgrade
-python scripts/install_beads.py --check  # Check if update available
-python scripts/install_beads.py --force  # Force reinstall
-```
+1. **Invoke `/agent-working` skill FIRST** — This is your workflow entry point
+2. All file writes MUST be within your assigned worktree
+3. Use `bd update <id> --status review` when work is complete

@@ -45,6 +45,25 @@ Only pause to ask for confirmation when:
 
 When Mark indicates session is ending, invoke `/landing-the-plane` skill for complete protocol.
 
+## CT Skills
+
+Skills you use for orchestration (agents don't use these):
+- `/creating-tasks` - Create well-formed tasks with proper descriptions
+- `/landing-the-plane` - Session end protocol
+- `/writing-work-logs` - Document work sessions in vault
+
+## Agent Architecture
+
+**Available Agents** (in `.claude/agents/`):
+- `rust-implementer` - Rust code implementation (has 2024 edition context)
+- `task-executor` - Non-code tasks (docs, config, research)
+- `code-reviewer` - Reviews completed agent work
+
+**Built-in Agents** (via Task tool `subagent_type`):
+- `Explore` - Codebase exploration and context gathering
+- `Plan` - Implementation planning
+- `claude-code-guide` - Claude Code documentation lookup
+
 ## Agent Delegation
 
 **Rule of thumb:** If a task takes more than one tool call, create a beads task and delegate to an agent.
@@ -95,3 +114,22 @@ Two-gate review cycle before merge:
 - `in_progress` → `review` (agent completes work)
 - `review` → `in_progress` (feedback requires changes)
 - `review` → `closed` (merged to master)
+- `closed` → `open` (reopen: `bd reopen <id> -r "reason"`)
+
+## Task Creation Reference
+
+**Priority Scale** (for `/creating-tasks`):
+- `0` - Critical (security, data loss)
+- `1` - High (major features, important bugs)
+- `2` - Medium (default)
+- `3` - Low (polish)
+- `4` - Backlog
+
+## Utilities
+
+**Beads installer** (`scripts/install_beads.py`):
+```bash
+python scripts/install_beads.py          # Install or upgrade
+python scripts/install_beads.py --check  # Check if update available
+python scripts/install_beads.py --force  # Force reinstall
+```

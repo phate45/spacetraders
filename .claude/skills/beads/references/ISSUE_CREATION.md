@@ -89,9 +89,9 @@ Common mistake: Putting implementation details in acceptance criteria. Here's th
 
 ### The pitfall
 
-Writing criteria like "- [ ] Use batchUpdate approach" locks you into one implementation.
+Writing criteria like "- Use batchUpdate approach" locks you into one implementation.
 
-Better: "- [ ] Formatting is applied atomically (all at once or not at all)" - allows flexible implementation.
+Better: "- Formatting is applied atomically (all at once or not at all)" - allows flexible implementation.
 
 ### Test yourself
 
@@ -108,19 +108,21 @@ Two-phase Docs API approach:
 Rationale: Atomic operations, easier to debug formatting separately
 ```
 
-✅ **Acceptance criteria:**
+✅ **Acceptance criteria:** (plain list, no checkboxes)
 ```
-- [ ] Markdown formatting renders in Doc (bold, italic, headings)
-- [ ] Lists preserve order and nesting
-- [ ] Links are clickable
-- [ ] Large documents (>50KB) process without timeout
+- Markdown formatting renders in Doc (bold, italic, headings)
+- Lists preserve order and nesting
+- Links are clickable
+- Large documents (>50KB) process without timeout
 ```
 
 ❌ **Wrong (design masquerading as criteria):**
 ```
-- [ ] Use two-phase batchUpdate approach
-- [ ] Apply formatting in second batchUpdate call
+- Use two-phase batchUpdate approach
+- Apply formatting in second batchUpdate call
 ```
+
+> **Note:** We use plain lists instead of checkboxes (`- [ ]`) for acceptance criteria. Agents track completion progress in the notes field CRITERIA section, not by updating the acceptance_criteria field. This avoids permission issues with `bd update --acceptance`.
 
 ## Quick Reference
 
