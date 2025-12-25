@@ -5,7 +5,8 @@ begin-work.py - Worktree setup for agent task execution
 Creates or detects worktrees for beads tasks and outputs agent-friendly JSON.
 
 Usage:
-    begin-work.py <task-id>
+    begin-work.py <task-id>           # Implementer mode
+    begin-work.py --review <task-id>  # Reviewer mode
 
 Output JSON:
     {
@@ -25,8 +26,8 @@ Output JSON:
             "worktree_name": "xyz",
             "branch_name": "task/xyz"
         },
-        "mode": "new" | "resume",
-        "resume_context": {  // Only present when mode="resume"
+        "mode": "new" | "resume" | "review",
+        "resume_context": {  // Present when mode="resume" or "review"
             "commits": ["abc123 commit title", ...],  // git log --oneline master..HEAD
             "uncommitted_changes": ["M file.rs", ...],  // git status --short
             "notes_sections": ["COMPLETED", "IN_PROGRESS", ...]  // Known sections found in notes
@@ -242,18 +243,37 @@ def get_resume_context(worktree_path: Path, task: dict) -> dict:
     return context
 
 
-def determine_mode(task: dict, worktree_exists: bool) -> str:
+def determine_mode(task: dict, worktree_exists: bool, review_mode: bool = False) -> str:
     """
     Determine work mode based on task status and worktree existence.
 
-    Rules:
+    Rules (implementer mode, review_mode=False):
     - status=in_progress + worktree exists = resume
     - status=review + worktree exists = resume (feedback rework)
     - status=open + no worktree = new
     - Other combinations are errors
+
+    Rules (reviewer mode, review_mode=True):
+    - status=review + worktree exists = review
+    - All other combinations are errors
     """
     status = task.get("status")
 
+    # Reviewer mode: strict validation
+    if review_mode:
+        if status != "review":
+            error_exit(
+                f"Task {task['id']} is not in review status (status={status})",
+                "Review mode requires task to be in 'review' status"
+            )
+        if not worktree_exists:
+            error_exit(
+                f"Task {task['id']} has no worktree to review",
+                "Cannot review without existing worktree"
+            )
+        return "review"
+
+    # Implementer mode: original logic
     if status == "in_progress" and worktree_exists:
         return "resume"
     elif status == "review" and worktree_exists:
@@ -290,6 +310,11 @@ def main():
         "task_id",
         help="Beads task ID (short form like 'q4x' or full form like 'spacetraders-q4x')"
     )
+    parser.add_argument(
+        "--review",
+        action="store_true",
+        help="Review mode: validates task is in 'review' status, no status transition"
+    )
 
     args = parser.parse_args()
 
@@ -311,7 +336,7 @@ def main():
     original_status = task.get("status")
 
     # Determine mode
-    mode = determine_mode(task, worktree_exists)
+    mode = determine_mode(task, worktree_exists, review_mode=args.review)
 
     # Create worktree if in 'new' mode
     if mode == "new":
@@ -319,11 +344,13 @@ def main():
         create_worktree(worktree_path, branch_name)
         set_task_in_progress(full_id)
     else:
-        # Resume mode - transition from review back to in_progress if needed
-        if original_status == "review":
+        # Resume or review mode - worktree already exists
+        if mode == "resume" and original_status == "review":
+            # Implementer resuming after feedback - transition back to in_progress
             set_task_in_progress(full_id)
-        # In resume mode, get the branch name from the worktree
-        # Use git worktree list to find the branch
+        # Review mode: no status transition (reviewer is inspecting, not claiming)
+
+        # Get branch name from existing worktree
         result = run_command(["git", "worktree", "list", "--porcelain"])
         branch_name = None
         found_worktree = False
@@ -372,8 +399,8 @@ def main():
         "mode": mode
     }
 
-    # Add resume context for resume mode
-    if mode == "resume":
+    # Add resume context for resume and review modes (both need to see existing state)
+    if mode in ("resume", "review"):
         output["resume_context"] = get_resume_context(worktree_path, task)
 
     # Output JSON to stdout
