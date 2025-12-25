@@ -17,13 +17,15 @@ Before reviewing, read these shared references:
 </mandatory_reading>
 
 <quick_start>
-You are reviewing task `<id>` in worktree `worktrees/<id>`.
+You are reviewing task `<id>`.
 
-1. Enter worktree: `cd worktrees/<id> && pwd`
-2. Load task context (note the jq pattern—bd show returns an array):
+1. Initialize review context:
    ```bash
-   bd show <id> --json | jq '.[0] | {acceptance_criteria, notes, design}'
+   begin-review <id>
    ```
+   This validates the task is in `review` status, confirms the worktree exists, and returns JSON with task fields and workspace info.
+
+2. Enter worktree: `cd <worktree_path> && pwd`
 3. Verify each criterion with evidence from deliverables
 4. Document findings as task comment (`bd comment`)
 5. Return summary to Control Tower
@@ -40,28 +42,32 @@ You are reviewing task `<id>` in worktree `worktrees/<id>`.
 </essential_principles>
 
 <workflow>
-**1. Enter Worktree**
+**1. Initialize Review Context**
 
 ```bash
-cd worktrees/<id> && pwd
+begin-review <id>
+```
+
+Output JSON contains:
+- `task.acceptance_criteria` — What success looks like (plain list, read-only)
+- `task.notes` — Agent's COMPLETED/CRITERIA sections (with progress checkmarks)
+- `task.design` — Intended approach
+- `task.comments` — Any prior review feedback
+- `workspace.worktree_path` — Path to enter
+- `resume_context.commits` — Commits on branch
+- `resume_context.uncommitted_changes` — Any unstaged work
+
+**If script errors:** Task isn't in `review` status or worktree doesn't exist. STOP AND REPORT to Control Tower.
+
+**If acceptance_criteria is empty or malformed:** STOP AND REPORT to Control Tower. You cannot review without clear criteria.
+
+**2. Enter Worktree**
+
+```bash
+cd <worktree_path> && pwd
 ```
 
 All subsequent git commands run in this directory—no `-C` flags needed.
-
-**2. Load Task Context**
-
-```bash
-bd show <id> --json | jq '.[0] | {acceptance_criteria, notes, design}'
-```
-
-**Important:** `bd show` returns an array. Use `.[0]` to access the task object, then select specific fields. Without this, jq errors on `Cannot index array with string`.
-
-Extract:
-- `acceptance_criteria` — What success looks like (plain list, read-only)
-- `notes` — Agent's COMPLETED/CRITERIA sections (with progress checkmarks)
-- `design` — Intended approach
-
-**If acceptance_criteria is empty or malformed:** STOP AND REPORT to Control Tower. You cannot review without clear criteria.
 
 **3. Review Deliverables**
 
