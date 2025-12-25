@@ -57,9 +57,11 @@ bd show <id> --json | jq '.[0] | {acceptance_criteria, notes, design}'
 **Important:** `bd show` returns an array. Use `.[0]` to access the task object, then select specific fields. Without this, jq errors on `Cannot index array with string`.
 
 Extract:
-- `acceptance_criteria` — What success looks like
-- `notes` — Agent's COMPLETED/CRITERIA sections
+- `acceptance_criteria` — What success looks like (plain list, read-only)
+- `notes` — Agent's COMPLETED/CRITERIA sections (with progress checkmarks)
 - `design` — Intended approach
+
+**If acceptance_criteria is empty or malformed:** STOP AND REPORT to Control Tower. You cannot review without clear criteria.
 
 **3. Review Deliverables**
 
@@ -91,6 +93,10 @@ Common failure modes:
 - No unrelated changes bundled in
 - No debug artifacts (console.log, TODO, test files)
 
+All hygiene issues are valid feedback for the implementer to address—report them in your comment. The distinction between blocking issues and observations:
+- **Blockers:** Failing tests, broken build, uncommitted changes, missing required files
+- **Observations:** Missing comments, discovered side quests, minor style inconsistencies
+
 **6. Document Findings**
 
 Add your review as a **comment** (preserves agent's notes):
@@ -115,7 +121,7 @@ HYGIENE:
 VERDICT: APPROVE | REQUEST_CHANGES
 REASON: [Brief explanation]
 
-NEXT: [If changes needed, what specifically]" -a "code-reviewer" --json
+NEXT: [If changes needed, what specifically]" -a "task-reviewer" --json
 ```
 
 **Why comments instead of notes?** The agent's notes field contains their work record (COMPLETED, CRITERIA, KEY_DECISIONS). Using `bd comment` keeps review feedback separate—the agent can read your feedback without losing their checkpoint state.
@@ -153,7 +159,7 @@ Control Tower reads comments for detail, then decides to escalate to Mark or res
 - Uncommitted changes present
 - Significant hygiene problems
 
-**When uncertain:** Document the uncertainty in notes and let Control Tower decide. "Criterion X technically met but implementation seems fragile" is useful information.
+**When uncertain:** Document the uncertainty in your comment and let Control Tower decide. "Criterion X technically met but implementation seems fragile" is useful information.
 </verdict_guidelines>
 
 <anti_patterns>

@@ -8,7 +8,7 @@ Task context flows through beads fields. Understanding each field's purpose prev
 |-------|---------|------------|----------|
 | `description` | Problem statement | Immutable | WHY and WHAT (what problem we're solving) |
 | `design` | Implementation approach | Can evolve | HOW to build it (technical approach) |
-| `acceptance_criteria` | Definition of done | Mostly stable | WHAT success looks like (verifiable outcomes) |
+| `acceptance_criteria` | Definition of done | **Read-only** (agents) | WHAT success looks like (plain list, no checkboxes) |
 | `notes` | Session handoff | Frequent updates | Current state (checkpoint/resume context) |
 | `comments` | External feedback | Append-only | Review findings, CT notes (via `bd comment`) |
 
@@ -34,6 +34,13 @@ Task context flows through beads fields. Understanding each field's purpose prev
 - `acceptance_criteria` = WHAT (verifiable outcomes, definition of done)
 
 Design can evolve as implementation reveals better approaches. Acceptance criteria remain stable once defined.
+
+**acceptance_criteria format:**
+- Plain list (bullets or numbered), NOT checkboxes
+- Read-only for agents—only Control Tower modifies this field
+- Track your progress in the notes field CRITERIA section (that's where checkboxes go)
+
+**If acceptance_criteria is empty or malformed:** STOP AND REPORT to Control Tower. Do not proceed with work or review if you don't have clear criteria to verify against.
 
 **notes vs comments:**
 - `notes` = Agent's work record (owned by implementer)

@@ -158,7 +158,7 @@ Verify `pwd` output shows `<repo>/worktrees/<id>` before proceeding.
 
 - **Shell tools** (rg, git, etc.): Relative paths work after `cd`
 - **Read/Edit/Write/Grep/Glob**: MUST use full absolute paths including `/worktrees/<id>/`
-- **Heavy tools** (cargo, bun): Use `mcp__host-executor__execute_command(..., worktree=<worktree_name>)`
+- **`cargo` and `bun` only**: Use `mcp__host-executor__execute_command(tool="cargo", args="...", worktree=<worktree_name>)`
 - **bd**: Works from anywhere—finds `.beads/` automatically
 </step>
 
@@ -191,7 +191,8 @@ TodoWrite([
 - Provides spatial grounding for the agent
 - Clear visual reminder of workspace isolation
 - Prevents accidental main repo edits
-- Mark as completed immediately after creation
+
+Create the worktree path item with `status: "completed"` from the start—it's a spatial anchor, not a task to complete.
 </step>
 
 <step name="read_task_context">
@@ -201,15 +202,18 @@ From `begin-work` output, read fields in priority order:
 
 **If mode = "resume":**
 1. **notes field** - Start here. Contains handoff from previous session.
-2. **acceptance_criteria** - Check what's already marked `[x]` as done
-3. **design field** (if needed) - Review implementation approach
-4. **description** (if needed) - Refresh on problem statement
+2. **comments** - Check for review feedback if returning from `review` status.
+3. **acceptance_criteria** - Cross-reference with your CRITERIA section in notes.
+4. **design field** (if needed) - Review implementation approach.
+5. **description** (if needed) - Refresh on problem statement.
 
 **If mode = "new":**
-1. **acceptance_criteria** - Your definition of done
+1. **acceptance_criteria** - Your definition of done (read-only, plain list)
 2. **design field** - Implementation approach (HOW to build)
 3. **description** - Problem statement (WHY and WHAT)
 4. **notes field** - Usually empty for new tasks
+
+**If acceptance_criteria is empty or malformed:** STOP AND REPORT to Control Tower. Do not proceed without clear criteria.
 
 **Reading large reference documents:**
 
@@ -258,7 +262,7 @@ Include a CRITERIA section in your notes update showing which criteria are compl
 CRITERIA: ✓ First criterion, ✓ Second criterion | Remaining: Third criterion
 ```
 
-Mark criteria complete when VERIFIED, not just implemented. Do NOT use `bd update --acceptance`—track progress in notes instead.
+Mark criteria complete when VERIFIED, not just implemented. The `acceptance_criteria` field is read-only—track your progress in the notes CRITERIA section.
 
 **Update TodoWrite status:**
 - Mark current item `in_progress` when you start it
@@ -337,7 +341,10 @@ When all acceptance criteria are met:
    git add -A && git commit -m "<type>(<id>): <summary>"
    ```
 
-   Example: `git commit -m "task(abc): implement begin-work script"`
+   **Commit type:** Use the task's `issue_type` field (task, bug, feature). Examples:
+   - `task(abc): implement begin-work script`
+   - `feat(xyz): add dark mode toggle`
+   - `fix(123): resolve null pointer in parser`
 
 2. **Final status update with notes:**
    ```bash
@@ -553,7 +560,7 @@ Agent workflow is successful when:
 - [ ] Agent returns (doesn't switch tasks)
 
 **Completion:**
-- [ ] All acceptance criteria marked `[x]`
+- [ ] All acceptance criteria verified (tracked in notes CRITERIA section)
 - [ ] Status set to `review`
 - [ ] Deliverables reported with file paths
 - [ ] Key decisions documented
