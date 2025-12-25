@@ -48,7 +48,9 @@ When Mark indicates session is ending, invoke `/landing-the-plane` skill for com
 ## CT Skills
 
 Skills you use for orchestration (agents don't use these):
-- `/creating-tasks` - Create well-formed tasks with proper descriptions
+- `/creating-tasks` - Create well-formed tasks with proper descriptions (invoke EVERY time)
+- `/dispatching-agents` - Decision logic for agent dispatch (invoke EVERY time)
+- `/checkpointing` - Preparation before context compaction
 - `/landing-the-plane` - Session end protocol
 - `/writing-work-logs` - Document work sessions in vault
 
@@ -63,7 +65,6 @@ Skills you use for orchestration (agents don't use these):
 
 **Built-in Agents** (via Task tool `subagent_type`):
 - `Explore` - Codebase exploration and context gathering
-- `Plan` - Implementation planning
 - `claude-code-guide` - Claude Code documentation lookup
 
 ## Agent Delegation
@@ -71,41 +72,33 @@ Skills you use for orchestration (agents don't use these):
 **Rule of thumb:** If a task takes more than one tool call, create a beads task and delegate to an agent.
 
 **Workflow:**
-1. Create task using `/creating-tasks` skill (ensures proper fields)
-2. Dispatch agent with task ID — `begin-work` script handles status transition
+1. Create task using `/creating-tasks` skill
+2. Invoke `/dispatching-agents` skill for dispatch decisions
 3. Agent works in isolated worktree, reports completion
 
-**Background agents are preferred:**
-- Launch with `run_in_background: true`
-- Frees you to prepare other work or discuss with Mark
-- Returns agent ID immediately for later `resume` if needed
-- Check progress with `TaskOutput(block=false)`
-- Wait for completion with `TaskOutput(block=true)` only when blocked
+The `/dispatching-agents` skill covers agent selection, model choice, execution mode, prompt construction, and resume patterns. Invoke it before every dispatch.
 
 ## Worktree Workflow
 
 Agents execute work in git worktrees (see CLAUDE.md). The `begin-work` script handles setup.
+Agents begin working after being dispatched. CT is responsible for the 'wrap up' (see below).
 
 **CT responsibilities:**
 - Pass task ID to agent
-- Review work when agent completes (status = `review`)
+- Review work when agent completes (status = `review`) (see below for decision tree)
 - Coordinate merge after approval
 - Clean up worktree after merge
 
-**Worktree cleanup (after merge):**
-```bash
-git worktree remove worktrees/<id>   # Removes worktree + cleans git metadata
-git branch -d task/<id>              # Deletes branch (use -D if not merged)
-```
-
-**NEVER** use `rm -rf worktrees/<id>` directly—this leaves git metadata stale and causes `begin-work` failures on subsequent runs.
+**After approval:** Run `Bash(end-work <id>)` to handle merge, cleanup, and `bd close` in one step.
 
 ## Review Workflow
 
 Two-gate review cycle before merge:
 
-1. **First gate (CT or review agent):** Catches obvious issues
-   - If issues found: add feedback to task notes, resume agent
+1. **First gate:** Catches mechanical issues
+   - **Code changes** → Delegate to `task-reviewer` agent
+   - **Research tasks** (no code) → CT reviews directly, can close without Mark
+   - If issues found: feedback via task comments, resume implementer
    - If clean: escalate to Mark
 
 2. **Second gate (Mark):** Final approval before merge
@@ -118,20 +111,3 @@ Two-gate review cycle before merge:
 - `review` → `closed` (merged to master)
 - `closed` → `open` (reopen: `bd reopen <id> -r "reason"`)
 
-## Task Creation Reference
-
-**Priority Scale** (for `/creating-tasks`):
-- `0` - Critical (security, data loss)
-- `1` - High (major features, important bugs)
-- `2` - Medium (default)
-- `3` - Low (polish)
-- `4` - Backlog
-
-## Utilities
-
-**Beads installer** (`scripts/install_beads.py`):
-```bash
-python scripts/install_beads.py          # Install or upgrade
-python scripts/install_beads.py --check  # Check if update available
-python scripts/install_beads.py --force  # Force reinstall
-```
