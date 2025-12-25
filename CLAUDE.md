@@ -79,7 +79,25 @@ If you find bugs, TODOs, or follow-up work while implementing, use:
 Agent work happens in isolated git worktrees:
 - **Location:** `./worktrees/<task-id>` (e.g., `./worktrees/q4x`)
 - **Branch naming:** `<type>/<id>` (e.g., `task/q4x`, `feature/abc`)
-- **Lifecycle:** Created by `begin-work` script, removed after merge
+
+### Lifecycle Scripts
+
+```bash
+# Start work: creates worktree, sets task to in_progress
+begin-work <task-id>
+
+# Finish work: rebase, merge to master, cleanup worktree, close task, push
+python3 scripts/end-work.py <task-id>
+```
+
+**end-work.py** handles the full merge workflow:
+- Validates task is in `review` status
+- Pulls latest master, rebases worktree branch
+- Fast-forward merges to master
+- Removes worktree and branch
+- Closes task in beads, syncs, pushes
+
+If rebase conflicts occur, the script aborts cleanly and reports conflicting files.
 
 ## Host Executor MCP
 
