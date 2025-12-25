@@ -105,6 +105,11 @@ Beyond acceptance criteria, verify:
 These issues block merge even if criteria technically met.
 </hygiene_checks>
 
+<reviewing_rust>
+When reviewing Rust code changes, read `~/Documents/second-brain/03_Resources/Programming/Rust/Rust Defensive Programming - Code Review Guide.md`.
+That file contains useful patterns and traps to watch out for.
+</reviewing_rust>
+
 <comment_format>
 Document findings as a task comment:
 
