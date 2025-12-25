@@ -13,7 +13,7 @@ pub struct Contract {
     pub terms: ContractTerms,
     pub accepted: bool,
     pub fulfilled: bool,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    pub expiration: String,
     pub deadline_to_accept: Option<String>,
 }
 
@@ -23,7 +23,6 @@ pub struct Contract {
 pub struct ContractTerms {
     pub deadline: String,
     pub payment: ContractPayment,
-    #[serde(skip_serializing_if = "Option::is_none")]
     pub deliver: Option<Vec<ContractDeliverGood>>,
 }
 
