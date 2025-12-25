@@ -11,6 +11,15 @@ A SpaceTraders API client and automation project. SpaceTraders is a programmable
 - **Python (uv)** - Scripting, automation, build orchestration
 - **TypeScript (bun)** - Future frontend visualizations (deferred)
 
+## API Reference
+
+SpaceTraders API schemas are available locally:
+- **Full reference:** `DOCS-REFERENCE.md` — endpoint listing, model descriptions
+- **JSON schemas:** `api-docs/models/*.json` — 76 model definitions (Waypoint.json, Contract.json, etc.)
+- **OpenAPI spec:** `api-docs/reference/SpaceTraders.json` — complete API definition
+
+When implementing API endpoints, check these local schemas first before making test API calls.
+
 ## Command Execution
 
 **Unsure about working directory?** Run `pwd` first.
