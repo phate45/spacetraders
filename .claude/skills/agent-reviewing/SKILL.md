@@ -48,14 +48,38 @@ You are reviewing task `<id>`.
 begin-review <id>
 ```
 
-Output JSON contains:
+**Output structure:**
+```json
+{
+  "task": {
+    "id": "spacetraders-abc",
+    "title": "...",
+    "description": "...",
+    "design": "...",
+    "acceptance_criteria": "...",
+    "notes": "...",
+    "comments": [{"id": 1, "author": "task-executor", "text": "...", "created_at": "..."}]
+  },
+  "workspace": {
+    "worktree_path": "worktrees/abc",
+    "worktree_name": "abc",
+    "branch_name": "task/abc"
+  },
+  "mode": "review",
+  "resume_context": {
+    "commits": ["abc123 commit title", ...],
+    "uncommitted_changes": ["M file.rs", ...],
+    "notes_sections": ["COMPLETED", "CRITERIA", ...]
+  }
+}
+```
+
+**Key fields for review:**
 - `task.acceptance_criteria` — What success looks like (plain list, read-only)
-- `task.notes` — Agent's COMPLETED/CRITERIA sections (with progress checkmarks)
-- `task.design` — Intended approach
+- `task.notes` — Agent's COMPLETED/CRITERIA sections (verify these claims)
 - `task.comments` — Any prior review feedback
-- `workspace.worktree_path` — Path to enter
-- `resume_context.commits` — Commits on branch
-- `resume_context.uncommitted_changes` — Any unstaged work
+- `resume_context.commits` — What the agent committed (review these)
+- `resume_context.uncommitted_changes` — Should be empty if agent finished cleanly
 
 **If script errors:** Task isn't in `review` status or worktree doesn't exist. STOP AND REPORT to Control Tower.
 
