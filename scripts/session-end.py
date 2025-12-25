@@ -32,7 +32,9 @@ Output JSON:
         "session_summary": {
             "in_progress_count": 2,
             "review_count": 1,
-            "open_count": 5
+            "open_count": 5,
+            "work_log_exists": true,
+            "work_log_path": "/home/.../logs/2025-12-25.md"
         },
         "message": "Session closed cleanly"
     }
@@ -47,7 +49,11 @@ Exit codes:
 import json
 import subprocess
 import sys
+from datetime import date
 from pathlib import Path
+
+# Vault work log location
+WORK_LOG_DIR = Path.home() / "Documents/second-brain/01_Projects/spacetraders/logs"
 
 
 def run_command(
@@ -214,8 +220,20 @@ def verify_up_to_date(project_root: Path) -> tuple[bool, str]:
     return (up_to_date, branch)
 
 
+def check_work_log_exists() -> tuple[bool, str]:
+    """
+    Check if today's work log file exists.
+
+    Returns:
+        Tuple of (exists, path)
+    """
+    today = date.today().isoformat()  # YYYY-MM-DD
+    log_path = WORK_LOG_DIR / f"{today}.md"
+    return (log_path.exists(), str(log_path))
+
+
 def get_session_summary() -> dict:
-    """Get counts of issues by status."""
+    """Get counts of issues by status and work log state."""
     summary = {
         "in_progress_count": 0,
         "review_count": 0,
@@ -235,6 +253,11 @@ def get_session_summary() -> dict:
                 summary[key] = len(data) if data else 0
             except json.JSONDecodeError:
                 pass
+
+    # Check work log
+    log_exists, log_path = check_work_log_exists()
+    summary["work_log_exists"] = log_exists
+    summary["work_log_path"] = log_path
 
     return summary
 
