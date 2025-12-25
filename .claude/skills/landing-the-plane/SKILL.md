@@ -60,30 +60,27 @@ KEY_DECISIONS: [Important user guidance or choices made]"
 
 Notes survive context compaction. Write as if explaining to a future agent with zero conversation history.
 
-### 4. Push to Remote (MANDATORY)
+### 4. Sync and Push (MANDATORY)
+
+Run the session-end script to handle sync/pull/push in one call:
 
 ```bash
-git pull --rebase
-bd sync
-git push
-git status  # MUST show "up to date with origin"
+python3 scripts/session-end.py --pretty
 ```
 
-If push fails, resolve and retry until it succeeds.
+**Exit codes:**
+- `0` - Success: synced, pulled, pushed, verified
+- `2` - Conflicts: resolve manually, then run again
+- `3` - Dirty: uncommitted non-beads changes, commit first
 
-### 5. Clean Up
+The script handles `bd sync`, `git pull --rebase`, `git push`, and verification automatically.
+
+### 5. Clean Up (if needed)
 
 - Clear stashes: `git stash list` then `git stash drop` if appropriate
 - Prune remote branches if needed
 
-### 6. Verify
-
-All changes must be:
-- Committed locally
-- Pushed to remote
-- Visible in `git status` as "up to date"
-
-### 7. Write Work Log
+### 6. Write Work Log
 
 Synthesize the session into a work log entry in the vault:
 
@@ -93,7 +90,7 @@ Synthesize the session into a work log entry in the vault:
 
 This creates a narrative summary of what was accomplished, not just a list of closed tasks.
 
-### 8. Hand Off
+### 7. Hand Off
 
 Provide context for next session:
 - What was completed
@@ -110,11 +107,10 @@ For comprehensive notes patterns and resumability guidelines, see the [beads ski
 
 | Anti-Pattern | Why It's Wrong |
 |--------------|----------------|
-| Stop before `git push` completes | Work stranded locally, causes rebase conflicts |
-| Say "ready to push when you are" | YOU must push, not Mark |
-| Batch the push for later | Push NOW, not later |
-| Assume push will succeed | Verify with `git status` |
-| Skip `bd sync` | Beads changes won't reach remote |
+| Skip `session-end.py` | Sync/push are mandatory, not optional |
+| Ignore non-zero exit codes | Conflicts (2) and dirty (3) require action |
+| Say "ready to push when you are" | YOU must run the script, not Mark |
+| Stop before script succeeds | Work stranded locally, causes rebase conflicts |
 
 **Mark coordinates multiple agents.** Unpushed work causes severe rebase conflicts when other agents push changes.
 
@@ -136,6 +132,5 @@ See [resolving-jsonl-conflicts](../resolving-jsonl-conflicts/SKILL.md) for detai
 ```bash
 # Minimal landing sequence
 bd close <ids> -r "Done"
-git pull --rebase && bd sync && git push
-git status  # Verify "up to date"
+python3 scripts/session-end.py --pretty
 ```
