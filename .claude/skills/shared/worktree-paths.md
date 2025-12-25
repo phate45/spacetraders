@@ -10,7 +10,7 @@ Agents work in isolated worktrees at `./worktrees/<task-id>`. After entering the
 | Read/Edit/Write tools | Full absolute path | `Read("/home/.../worktrees/abc/src/main.rs")` |
 | Grep/Glob tools | Full absolute path | `Grep(path="/home/.../worktrees/abc", ...)` |
 | bd commands | Run anywhere | `bd show abc --json` (finds .beads/ automatically) |
-| Heavy tools (cargo, bun) | Via host-executor | `mcp__host-executor__execute_command(..., worktree="abc")` |
+| `cargo` and `bun` only | Via host-executor MCP | `mcp__host-executor__execute_command(tool="cargo", args="check", worktree="abc")` |
 
 ## Why This Matters
 
