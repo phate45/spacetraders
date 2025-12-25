@@ -1,10 +1,12 @@
 mod agent;
 mod config;
+mod contracts;
 mod registration;
 mod waypoint;
 
 use agent::fetch_agent;
 use config::Config;
+use contracts::list_contracts;
 use registration::register_agent;
 use waypoint::fetch_waypoint;
 
@@ -72,6 +74,22 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 match fetch_waypoint(token, system_symbol, headquarters).await {
                     Ok(waypoint) => waypoint.display(),
                     Err(e) => eprintln!("Error fetching waypoint: {}", e),
+                }
+
+                // Fetch and display contracts
+                println!("\nFetching contracts...");
+                match list_contracts(token).await {
+                    Ok(contracts) => {
+                        if contracts.is_empty() {
+                            println!("No contracts available.");
+                        } else {
+                            println!("Found {} contract(s):", contracts.len());
+                            for contract in contracts {
+                                contract.display();
+                            }
+                        }
+                    },
+                    Err(e) => eprintln!("Error fetching contracts: {}", e),
                 }
             },
             Err(e) => eprintln!("Error fetching agent: {}", e),
