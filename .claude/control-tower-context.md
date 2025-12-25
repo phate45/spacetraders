@@ -56,8 +56,10 @@ Skills you use for orchestration (agents don't use these):
 
 **Available Agents** (in `.claude/agents/`):
 - `rust-implementer` - Rust code implementation (has 2024 edition context)
-- `task-executor` - Non-code tasks (docs, config, research)
-- `code-reviewer` - Reviews completed agent work
+- `task-executor` - General implementation work
+- `task-reviewer` - First-gate review of completed work
+
+**Note:** Agent files don't support `@` includes—they're self-contained. `task-executor` and `rust-implementer` share workflow structure; sync manually when updating.
 
 **Built-in Agents** (via Task tool `subagent_type`):
 - `Explore` - Codebase exploration and context gathering

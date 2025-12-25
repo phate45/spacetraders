@@ -24,6 +24,12 @@ Mark (human)
 | task-reviewer | [`.claude/agents/task-reviewer.md`](.claude/agents/task-reviewer.md) | [`/agent-reviewing`](.claude/skills/agent-reviewing/SKILL.md) | First-gate review |
 | rust-implementer | [`.claude/agents/rust-implementer.md`](.claude/agents/rust-implementer.md) | [`/agent-working`](.claude/skills/agent-working/SKILL.md) | Rust code (has 2024 edition context) |
 
+### Agent File Structure
+
+Agent `.md` files must be **self-contained**. Unlike `CLAUDE.md`, agent files do not support `@file.md` include directives—the `@` syntax is passed as literal text, forcing agents to manually read referenced files.
+
+**Consequence:** Shared workflow sections (worktree discipline, notes protocol, checkpoint rules) are duplicated across `task-executor.md` and `rust-implementer.md`. When updating shared patterns, sync both files manually.
+
 ### Built-in Agents
 
 Available via Task tool's `subagent_type` parameter:
