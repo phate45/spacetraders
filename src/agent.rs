@@ -1,6 +1,6 @@
 use serde::Deserialize;
 
-const BASE_URL: &str = "https://api.spacetraders.io/v2";
+pub const BASE_URL: &str = "https://api.spacetraders.io/v2";
 
 /// Generic API response wrapper that handles the data envelope
 #[derive(Debug, Deserialize)]

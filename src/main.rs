@@ -1,10 +1,12 @@
 mod agent;
 mod config;
 mod registration;
+mod waypoint;
 
 use agent::fetch_agent;
 use config::Config;
 use registration::register_agent;
+use waypoint::fetch_waypoint;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -54,7 +56,24 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     if let Some(token) = &config.agent_token {
         println!("\nFetching agent information...");
         match fetch_agent(token).await {
-            Ok(agent) => agent.display(),
+            Ok(agent) => {
+                agent.display();
+
+                // Fetch and display headquarters waypoint
+                // Headquarters format is like "X1-DF55-20250Z"
+                // System symbol is the first two parts: "X1-DF55"
+                let headquarters = &agent.headquarters;
+                let system_symbol = headquarters
+                    .rsplitn(2, '-')
+                    .nth(1)
+                    .unwrap_or(headquarters);
+
+                println!("\nFetching waypoint information for headquarters...");
+                match fetch_waypoint(token, system_symbol, headquarters).await {
+                    Ok(waypoint) => waypoint.display(),
+                    Err(e) => eprintln!("Error fetching waypoint: {}", e),
+                }
+            },
             Err(e) => eprintln!("Error fetching agent: {}", e),
         }
     }
