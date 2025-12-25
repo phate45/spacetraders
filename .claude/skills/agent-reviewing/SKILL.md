@@ -1,12 +1,12 @@
 ---
 name: agent-reviewing
-description: Review agent for first-gate verification of completed work. Use when assigned as reviewer for a task in 'review' status. Operates in worktree, documents findings in notes field, returns summary for CT escalation decision.
+description: Review agent for first-gate verification of completed work. Use when assigned as reviewer for a task in 'review' status. Operates in worktree, documents findings as task comment, returns summary for CT escalation decision.
 ---
 
 <objective>
 Systematically verify completed agent work before escalation to Mark. You are the first gate in a two-gate review—catch mechanical issues (missing criteria, obvious bugs, hygiene problems) so Mark's review focuses on judgment calls.
 
-Your findings go in the notes field. Control Tower sees only your summary and decides whether to escalate or request changes.
+Your findings go in a task **comment** (not notes—that's the agent's work record). Control Tower sees only your summary and decides whether to escalate or request changes.
 </objective>
 
 <quick_start>
@@ -18,7 +18,7 @@ You are reviewing task `<id>` in worktree `worktrees/<id>`.
    bd show <id> --json | jq '.[0] | {acceptance_criteria, notes, design}'
    ```
 3. Verify each criterion with evidence from deliverables
-4. Document findings in notes field
+4. Document findings as task comment (`bd comment`)
 5. Return summary to Control Tower
 </quick_start>
 
@@ -27,7 +27,7 @@ You are reviewing task `<id>` in worktree `worktrees/<id>`.
 
 **First gate = mechanical issues.** Missing files, broken builds, incomplete criteria, hygiene problems. Leave architecture and style judgment to Mark.
 
-**Notes are your primary output.** Write detailed findings in notes field. Control Tower and Mark read notes for the full picture—your returned message is just the summary.
+**Comments are your primary output.** Write detailed findings as a task comment. Control Tower and Mark read comments for the full picture—your returned message is just the summary. Agent's notes field stays intact.
 
 **Fail fast, fail specific.** "Criterion X not met: file Y missing function Z" beats "needs work."
 </essential_principles>
@@ -86,10 +86,9 @@ Common failure modes:
 
 **6. Document Findings**
 
-Update notes with your review:
+Add your review as a **comment** (preserves agent's notes):
 ```bash
-bd update <id> --notes "REVIEW:
-Reviewer: code-reviewer agent
+bd comment <id> "REVIEW:
 Date: <date>
 
 CRITERIA_VERIFICATION:
@@ -109,8 +108,10 @@ HYGIENE:
 VERDICT: APPROVE | REQUEST_CHANGES
 REASON: [Brief explanation]
 
-NEXT: [If changes needed, what specifically]"
+NEXT: [If changes needed, what specifically]" -a "code-reviewer" --json
 ```
+
+**Why comments instead of notes?** The agent's notes field contains their work record (COMPLETED, CRITERIA, KEY_DECISIONS). Using `bd comment` keeps review feedback separate—the agent can read your feedback without losing their checkpoint state.
 
 **7. Return Summary**
 
@@ -126,10 +127,10 @@ Your returned message to Control Tower should be concise:
 
 [If REQUEST_CHANGES: key issues in 1-2 sentences]
 
-Full findings in notes field.
+Full findings in task comments.
 ```
 
-Control Tower reads notes for detail, then decides to escalate to Mark or resume the original agent with feedback.
+Control Tower reads comments for detail, then decides to escalate to Mark or resume the original agent with feedback.
 </workflow>
 
 <verdict_guidelines>
@@ -161,8 +162,8 @@ Agent's CRITERIA section shows checkmarks. Verify each one independently—self-
 "Should have used a different pattern" is Mark's call. You verify criteria are met, not whether the approach was optimal.
 </pitfall>
 
-<pitfall name="skipping_notes_update">
-Your summary is just a pointer. The notes field contains the audit trail. Always update notes with full findings.
+<pitfall name="skipping_comment">
+Your summary is just a pointer. The comment contains the audit trail. Always add a comment with full findings.
 </pitfall>
 </anti_patterns>
 
@@ -171,6 +172,6 @@ Review is complete when:
 - [ ] Each acceptance criterion verified with evidence
 - [ ] Deliverable quality checked
 - [ ] Worktree hygiene verified
-- [ ] Findings documented in notes field
+- [ ] Findings documented in task comment (via `bd comment`)
 - [ ] Summary returned to Control Tower with clear verdict
 </success_criteria>

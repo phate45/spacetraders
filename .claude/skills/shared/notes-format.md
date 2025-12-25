@@ -61,6 +61,20 @@ KEY_DECISIONS: Using token bucket algorithm per Mark's guidance
 
 ## Key Rules
 
+**⚠️ CRITICAL: `bd update --notes` REPLACES the entire field.**
+
+The notes field is not append-only. When you run:
+```bash
+bd update <id> --notes "NEW_CONTENT"
+```
+The previous notes are completely replaced with `NEW_CONTENT`. If you don't synthesize previous state into your update, that context is **lost**.
+
+**Correct pattern:**
+1. Read current notes (provided by `begin-work` or `bd show`)
+2. Understand previous state
+3. Write COMPLETE current state (synthesizing what matters from previous)
+4. Overwrite with your comprehensive update
+
 - **Current state only** — Overwrite previous notes, don't append history
 - **Specific accomplishments** — Not vague progress statements
 - **Concrete next step** — Not "continue working"

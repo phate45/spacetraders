@@ -25,9 +25,10 @@ All agent work happens in dedicated worktrees at `./worktrees/<task-id>`. Never 
 
 Task context flows through beads fields in priority order:
 1. **notes** - Current state, most recent session handoff (read this FIRST on resume)
-2. **acceptance_criteria** - Definition of done, your checklist
-3. **design** - Implementation approach (HOW to build)
-4. **description** - Problem statement (WHY and WHAT)
+2. **comments** - External feedback, especially review findings (check on resume if status was `review`)
+3. **acceptance_criteria** - Definition of done, your checklist
+4. **design** - Implementation approach (HOW to build)
+5. **description** - Problem statement (WHY and WHAT)
 
 ## Checkpoint and Resume Model
 
@@ -43,13 +44,15 @@ Control Tower can then:
 
 ## State Persistence
 
-The notes field is your persistent memory across checkpoints:
+The notes field is your persistent memory across checkpoints.
+
+**⚠️ CRITICAL:** `bd update --notes` REPLACES the entire field. If you don't synthesize previous state into your update, that context is **lost**. See `.claude/skills/shared/notes-format.md` for the full warning and correct pattern.
+
+**Key rules:**
 - Overwrite previous notes (don't append history)
 - Write for zero-context resume (passes "future-me test" and "stranger test")
 - Include specific accomplishments, current state, concrete next step
 - Document blockers and key decisions
-
-See `.claude/skills/shared/notes-format.md` for the standard format.
 </essential_principles>
 
 <quick_start>
@@ -95,7 +98,8 @@ This command:
     "description": "...",
     "design": "...",
     "acceptance_criteria": "...",
-    "notes": "..."
+    "notes": "...",
+    "comments": [{"id": 1, "author": "code-reviewer", "text": "...", "created_at": "..."}]
   },
   "workspace": {
     "worktree_path": "/full/path/to/worktrees/abc",
@@ -458,6 +462,7 @@ Checkpoint state and return immediately when:
 | design | Implementation approach | Can evolve | HOW to build it (technical approach) |
 | acceptance_criteria | Definition of done | Mostly stable | WHAT success looks like (verifiable outcomes) |
 | notes | Session handoff | Frequent updates | Current state (checkpoint/resume context) |
+| comments | External feedback | Append-only | Review findings, CT notes (via `bd comment`) |
 
 **Critical distinction:**
 - **design** = HOW (implementation details, technical choices)

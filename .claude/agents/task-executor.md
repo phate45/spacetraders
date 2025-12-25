@@ -41,6 +41,18 @@ Mark items complete as you progress. This gives Control Tower visibility into yo
 <notes_field>
 The beads task `notes` field carries context across sessions and checkpoints.
 
+**⚠️ CRITICAL: `bd update --notes` REPLACES the entire field.**
+
+```
+Before: "COMPLETED: Built parser\nBLOCKERS: None"
+After running: bd update <id> --notes "IN_PROGRESS: Testing"
+Result: "IN_PROGRESS: Testing"  ← Previous content is GONE
+```
+
+**On resume:** Always read the notes field FIRST to get previous session state. The `/agent-working` skill provides this via `begin-work` output—don't skip reading it.
+
+**When updating:** Write the COMPLETE current state. Previous notes are your context, not something to preserve verbatim—synthesize into current state.
+
 **Format summary:**
 ```
 COMPLETED: Specific deliverables

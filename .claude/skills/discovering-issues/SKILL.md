@@ -78,10 +78,22 @@ bd create --title "Auth tokens not validated for expiry" \
 
 ## Update Parent Task Notes
 
-After creating the side quest, update your current task's notes:
+After creating the side quest, update your current task's notes.
+
+**⚠️ CRITICAL:** `bd update --notes` REPLACES the entire field. You must preserve existing sections (like COMPLETED) when adding DISCOVERED.
+
+**Pattern:** Read current notes → synthesize with new discovery → write complete state:
 
 ```bash
-bd update <current-task-id> --notes "IN_PROGRESS: [current work]
+# Your notes currently contain:
+# COMPLETED: Auth flow skeleton
+# IN_PROGRESS: Token validation
+# NEXT: Add refresh logic
+
+# After discovering a side quest, write COMPLETE state:
+bd update <current-task-id> --notes "COMPLETED: Auth flow skeleton
+
+IN_PROGRESS: Token validation
 
 DISCOVERED:
 - [Brief description] (tracked: <new-issue-id>, status: draft|blocker)
@@ -89,7 +101,7 @@ DISCOVERED:
 NEXT: [what you're doing next]" --json
 ```
 
-This creates a breadcrumb trail. When Control Tower reviews your work summary, they'll see what was discovered.
+This creates a breadcrumb trail while preserving your prior work. When Control Tower reviews your work summary, they'll see both what was accomplished and what was discovered.
 
 ## Dependencies Reference
 
