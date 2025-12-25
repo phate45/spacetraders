@@ -15,7 +15,10 @@ Output JSON:
             "description": "...",
             "design": "...",
             "acceptance_criteria": "...",
-            "notes": "..."
+            "notes": "...",
+            "comments": [  // Review feedback, external notes (separate from agent's notes)
+                {"id": 1, "author": "code-reviewer", "text": "...", "created_at": "..."}
+            ]
         },
         "workspace": {
             "worktree_path": "./worktrees/xyz",
@@ -96,6 +99,32 @@ def get_task_info(task_id: str) -> dict:
         error_exit(f"Task {task_id} is already closed")
 
     return task
+
+
+def get_task_comments(task_id: str) -> list:
+    """
+    Fetch comments for a task from beads.
+
+    Args:
+        task_id: Task ID (full form)
+
+    Returns:
+        List of comment dicts, or empty list if none
+    """
+    try:
+        result = subprocess.run(
+            ["bd", "comments", task_id, "--json"],
+            capture_output=True,
+            text=True,
+            check=False
+        )
+        if result.returncode == 0 and result.stdout.strip():
+            data = json.loads(result.stdout)
+            # bd comments returns null for no comments, or an array
+            return data if data else []
+    except (json.JSONDecodeError, Exception):
+        pass
+    return []
 
 
 def get_project_root() -> Path:
@@ -321,6 +350,9 @@ def main():
             # Fallback: reconstruct from task type
             branch_name = get_branch_name(task, short_id)
 
+    # Fetch comments (review feedback, external notes)
+    comments = get_task_comments(full_id)
+
     # Build output JSON
     output = {
         "task": {
@@ -329,7 +361,8 @@ def main():
             "description": task.get("description", ""),
             "design": task.get("design", ""),
             "acceptance_criteria": task.get("acceptance_criteria", ""),
-            "notes": task.get("notes", "")
+            "notes": task.get("notes", ""),
+            "comments": comments
         },
         "workspace": {
             "worktree_path": str(worktree_path.relative_to(project_root)),
