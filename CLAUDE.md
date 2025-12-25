@@ -54,6 +54,7 @@ This differs from `git`, which requires the correct working directory.
 bd ready                    # See available work (unblocked)
 bd list --status in_progress  # Check active work
 bd show <id>                # View issue details
+bd comments <id>            # View issue comments
 bd update <id> --status in_progress  # Claim work
 bd close <id> -r "Reason"   # Complete work
 bd sync                     # Sync with git
