@@ -16,6 +16,13 @@ Agents operate in isolation, receive task context via beads fields, execute work
 - Checkpoint state before yielding (errors, blockers, user decisions needed)
 </objective>
 
+<mandatory_reading>
+Before starting work, read these shared references:
+- `.claude/skills/shared/worktree-paths.md` — File path requirements for Read/Edit/Grep tools
+- `.claude/skills/shared/beads-field-reference.md` — Field semantics and context hierarchy
+- `.claude/skills/shared/notes-format.md` — Notes field structure and update patterns
+</mandatory_reading>
+
 <essential_principles>
 ## Workspace Isolation
 
@@ -147,24 +154,12 @@ cd <worktree_path> && pwd
 
 Verify `pwd` output shows `<repo>/worktrees/<id>` before proceeding.
 
-**File path requirements:**
+**File path requirements:** See `shared/worktree-paths.md` for full details.
 
-After `cd <worktree>`, shell commands use relative paths, but Read/Edit/Write tools require FULL paths including worktree:
-
-```
-✅ Correct:
-Read("/home/.../worktrees/abc/README.md")
-Edit("/home/.../worktrees/abc/src/main.rs", ...)
-
-❌ WRONG - points to main repo, NOT worktree:
-Read("/home/.../spacetraders/README.md")
-Edit("/home/.../spacetraders/src/main.rs", ...)
-```
-
-**Tool usage in worktree:**
-- **Shell tools** (rg, git, etc.): Use relative paths from working directory
+- **Shell tools** (rg, git, etc.): Relative paths work after `cd`
+- **Read/Edit/Write/Grep/Glob**: MUST use full absolute paths including `/worktrees/<id>/`
 - **Heavy tools** (cargo, bun): Use `mcp__host-executor__execute_command(..., worktree=<worktree_name>)`
-- **bd**: Run directly, no `cd` prefix - bd finds `.beads/` root automatically
+- **bd**: Works from anywhere—finds `.beads/` automatically
 </step>
 
 <step name="create_todo_list">
@@ -456,19 +451,16 @@ Checkpoint state and return immediately when:
 <field_reference>
 ## Beads Field Usage
 
-| Field | Purpose | Mutability | Contains |
-|-------|---------|------------|----------|
-| description | Problem statement | Immutable | WHY and WHAT (what problem we're solving) |
-| design | Implementation approach | Can evolve | HOW to build it (technical approach) |
-| acceptance_criteria | Definition of done | Mostly stable | WHAT success looks like (verifiable outcomes) |
-| notes | Session handoff | Frequent updates | Current state (checkpoint/resume context) |
-| comments | External feedback | Append-only | Review findings, CT notes (via `bd comment`) |
+See `shared/beads-field-reference.md` for full field semantics.
 
-**Critical distinction:**
-- **design** = HOW (implementation details, technical choices)
-- **acceptance_criteria** = WHAT (verifiable outcomes, definition of done)
+**Quick reference:**
+- `notes` — Your checkpoint state (read first on resume)
+- `comments` — External feedback (check if returning from review)
+- `acceptance_criteria` — Definition of done
+- `design` — HOW to build (can evolve)
+- `description` — WHY and WHAT (immutable)
 
-Design can evolve as implementation reveals better approaches. Acceptance criteria remain stable once defined (defines scope and success).
+**Critical:** `bd update --notes` REPLACES entire field. See `shared/notes-format.md` for correct pattern.
 </field_reference>
 
 <anti_patterns>

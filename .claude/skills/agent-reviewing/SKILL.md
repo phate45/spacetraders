@@ -9,6 +9,13 @@ Systematically verify completed agent work before escalation to Mark. You are th
 Your findings go in a task **comment** (not notes—that's the agent's work record). Control Tower sees only your summary and decides whether to escalate or request changes.
 </objective>
 
+<mandatory_reading>
+Before reviewing, read these shared references:
+- `.claude/skills/shared/worktree-paths.md` — File path requirements for Read/Grep tools
+- `.claude/skills/shared/beads-field-reference.md` — Field semantics and reading priority
+- `.claude/skills/shared/notes-format.md` — Notes field structure (to validate agent's checkpoint)
+</mandatory_reading>
+
 <quick_start>
 You are reviewing task `<id>` in worktree `worktrees/<id>`.
 
@@ -166,6 +173,84 @@ Agent's CRITERIA section shows checkmarks. Verify each one independently—self-
 Your summary is just a pointer. The comment contains the audit trail. Always add a comment with full findings.
 </pitfall>
 </anti_patterns>
+
+<error_handling>
+## When Things Go Wrong
+
+**Worktree access fails:**
+```
+Error: worktree doesn't exist / permission denied
+```
+STOP. Return to Control Tower with error. Don't improvise or check main repo instead.
+
+**Git commands fail:**
+```
+Error: not a git repository / cannot read commits
+```
+Document the error. You cannot verify hygiene without git access. Return with partial findings.
+
+**bd commands fail:**
+```
+Error: cannot add comment / task not found
+```
+Document findings in your output instead. Control Tower can add the comment manually. Don't silently skip documentation.
+
+**Cannot read deliverables:**
+```
+Error: file not found / permission denied on Read
+```
+This might BE a finding (agent didn't create expected files). Check acceptance criteria—if file should exist, that's a criterion failure. If it's a permissions issue, return with error.
+
+**Pattern:** When blocked, document what you could verify, what you couldn't, and why. Partial review with clear gaps beats silent failure.
+</error_handling>
+
+<escalation_boundaries>
+## Your Scope vs Mark's Scope
+
+**Your job (first gate):**
+- Verify each acceptance criterion has evidence
+- Check deliverables exist and are plausible
+- Catch obvious bugs, missing files, hygiene issues
+- Validate agent's notes reflect actual work
+
+**Mark's job (second gate):**
+- Architecture and design quality
+- Code style and idiom choices
+- Whether the approach was optimal
+- Subjective quality judgments
+
+**When you find something in Mark's territory:**
+
+Don't block on it. Document as an observation, not a criterion failure:
+
+```
+OBSERVATIONS:
+- Implementation uses pattern X; Mark may prefer Y (not blocking)
+```
+
+Then APPROVE if criteria are met, letting Mark make the call.
+
+**When genuinely uncertain:**
+
+If you can't tell whether a criterion is met:
+
+```
+UNCERTAIN:
+- Criterion 3: "Error handling complete" — found try/catch but unsure if all cases covered
+```
+
+Document the uncertainty, provide what evidence you found, let Control Tower decide.
+
+**Discovering unrelated issues:**
+
+If you find bugs or problems outside the acceptance criteria scope:
+
+1. Invoke `/discovering-issues` skill to create a draft task
+2. Note the task ID in your comment: `DISCOVERED: <id> - <one-line summary>`
+3. Don't block the review for out-of-scope issues
+
+Control Tower reads the full task later. Keep your review focused on the acceptance criteria.
+</escalation_boundaries>
 
 <success_criteria>
 Review is complete when:
