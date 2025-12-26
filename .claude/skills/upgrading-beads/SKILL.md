@@ -12,12 +12,12 @@ Complete workflow for checking and upgrading the beads CLI tool.
 ### 1. Check for Updates
 
 ```bash
-python3 scripts/install_beads.py --check --quiet
+python3 scripts/install_beads.py --check
 ```
 
-Output: `"beads_update_available": true` or `"beads_update_available": false`
+Shows installed version, latest version, and whether update is available.
 
-If no update available, stop here.
+If no update available, stop here. Otherwise note the version range for changelog review.
 
 ### 2. Review Changelog (If /tmp/beads Exists)
 
@@ -81,6 +81,21 @@ bd doctor
 ```
 
 Checks for common issues (sync problems, missing hooks).
+
+**Ignore these warnings** (local divergence from author's expectations):
+- `Sync Branch Config: sync-branch not configured`
+- `Claude Plugin: beads plugin not installed`
+- `Claude Integration: Not configured`
+
+**Surface to Mark** any other warnings or failures. If the changelog review (step 2 or 4) has relevant context for the issue, include it.
+
+### 7. Conclude
+
+Provide synthesis of:
+1. Version jump (from → to)
+2. Breaking changes affecting our usage
+3. New features of interest
+4. Any doctor issues that required resolution
 
 ## When to Use This Skill
 
