@@ -7,22 +7,34 @@ This document is the definitive reference for the agent delegation system. It pr
 ```
 Mark (human)
   └── Control Tower (main Claude instance)
-        ├── task-executor   → Implementation work
-        ├── task-reviewer   → First-gate review
-        └── rust-implementer → Rust-specific implementation
+        │
+        ├── Implementation (worktree)
+        │   ├── task-executor    → General implementation
+        │   └── rust-implementer → Rust-specific (2024 edition)
+        │
+        ├── Review (worktree)
+        │   └── task-reviewer    → First-gate review
+        │
+        ├── Research (no worktree)
+        │   └── researcher       → Read-only investigation
+        │
+        └── Utility (no worktree)
+            └── quality-gate     → Landing verification
 ```
 
 **Control Tower (CT)** orchestrates work through task graphs. It delegates focused work to specialized subagents, synthesizes their outputs, and maintains session continuity.
 
-**Subagents** are stateless workers that receive task context via beads fields, execute in isolated worktrees, and checkpoint state before returning.
+**Subagents** are stateless workers that receive task context via beads fields, execute in isolated worktrees (implementation/review) or directly on main repo (research/utility), and checkpoint state before returning.
 
 ## Agent Definitions
 
 | Agent | Definition | Workflow Skill | Purpose |
 |-------|------------|----------------|---------|
 | task-executor | [`.claude/agents/task-executor.md`](.claude/agents/task-executor.md) | [`/agent-working`](.claude/skills/agent-working/SKILL.md) | General implementation |
-| task-reviewer | [`.claude/agents/task-reviewer.md`](.claude/agents/task-reviewer.md) | [`/agent-reviewing`](.claude/skills/agent-reviewing/SKILL.md) | First-gate review |
 | rust-implementer | [`.claude/agents/rust-implementer.md`](.claude/agents/rust-implementer.md) | [`/agent-working`](.claude/skills/agent-working/SKILL.md) | Rust code (has 2024 edition context) |
+| task-reviewer | [`.claude/agents/task-reviewer.md`](.claude/agents/task-reviewer.md) | [`/agent-reviewing`](.claude/skills/agent-reviewing/SKILL.md) | First-gate review |
+| researcher | [`.claude/agents/researcher.md`](.claude/agents/researcher.md) | [`/agent-researching`](.claude/skills/agent-researching/SKILL.md) | Read-only investigation |
+| quality-gate | [`.claude/agents/quality-gate.md`](.claude/agents/quality-gate.md) | — | Landing verification |
 
 ### Agent File Structure
 
@@ -58,6 +70,19 @@ spacetraders/
 
 **Reference:** [`shared/worktree-paths.md`](.claude/skills/shared/worktree-paths.md)
 
+## Execution Modes
+
+Agents operate in one of two modes:
+
+| Mode | Agents | Setup Script | Closure |
+|------|--------|--------------|---------|
+| Worktree | task-executor, rust-implementer, task-reviewer | `begin-work` | `end-work` (merge) |
+| Direct | researcher, quality-gate | `begin-research` or none | `bd close` directly |
+
+**Worktree mode:** Isolated branch, changes merged to master after review.
+
+**Direct mode:** Read-only on main repo, output via notes/comments/vault. No merge step.
+
 ## Task Lifecycle
 
 ### Scripts
@@ -65,6 +90,7 @@ spacetraders/
 | Script | Purpose | Reference |
 |--------|---------|-----------|
 | `begin-work <id>` | Create worktree, set status, output JSON context | [`scripts/begin-work.py`](scripts/begin-work.py) |
+| `begin-research <id>` | Claim task without worktree, output JSON context | [`scripts/begin-research.sh`](scripts/begin-research.sh) |
 | `end-work <id>` | Rebase, merge, cleanup, close task | [`scripts/end-work.py`](scripts/end-work.py) |
 
 ### Status Flow
@@ -81,10 +107,10 @@ draft ──────► open ──────► in_progress ────�
 
 **Transitions:**
 - `draft → open` — Side quest refined, ready for work
-- `open → in_progress` — `begin-work` claims task
+- `open → in_progress` — `begin-work` or `begin-research` claims task
 - `in_progress → review` — Agent completes work
 - `review → in_progress` — Feedback requires changes
-- `review → closed` — Merged to master
+- `review → closed` — Merged to master (worktree) or closed directly (research)
 
 ## Two-Gate Review
 
@@ -187,9 +213,11 @@ Can task be done in one tool call?
 ```bash
 # CT creates task, dispatches agent
 bd create --title="..." --type=task
-# Agent runs begin-work, works in worktree, sets status to review
-# CT reviews, coordinates merge, cleans up
+# Agent runs begin-work (or begin-research), works, sets status to review
+# CT reviews, coordinates closure (end-work or bd close)
 ```
+
+**Reference:** [`/dispatching-agents`](.claude/skills/dispatching-agents/SKILL.md) — Agent selection, model choice, prompt construction
 
 ### Worktree Cleanup (after merge)
 
@@ -205,14 +233,18 @@ git branch -d task/<id>              # Deletes branch
 ```
 .claude/
 ├── agents/
-│   ├── task-executor.md      # Implementation agent blueprint
-│   ├── task-reviewer.md      # Review agent blueprint
-│   └── rust-implementer.md   # Rust-specific agent
+│   ├── task-executor.md      # Implementation agent
+│   ├── rust-implementer.md   # Rust-specific implementation
+│   ├── task-reviewer.md      # First-gate review
+│   ├── researcher.md         # Read-only investigation
+│   └── quality-gate.md       # Landing verification
 ├── skills/
 │   ├── agent-working/        # Implementation workflow
 │   ├── agent-reviewing/      # Review workflow
+│   ├── agent-researching/    # Research workflow
 │   ├── creating-tasks/       # Task creation guidance
 │   ├── discovering-issues/   # Side quest capture
+│   ├── dispatching-agents/   # Agent dispatch logic (CT)
 │   ├── landing-the-plane/    # Session end protocol
 │   └── shared/
 │       ├── worktree-paths.md
@@ -223,6 +255,7 @@ git branch -d task/<id>              # Deletes branch
 
 scripts/
 ├── begin-work.py             # Worktree setup
+├── begin-research.sh         # Research task setup (no worktree)
 ├── end-work.py               # Merge workflow
 └── session-start.py          # Session state report
 ```
