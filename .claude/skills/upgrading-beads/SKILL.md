@@ -1,31 +1,63 @@
 ---
 name: upgrading-beads
-description: Post-upgrade tasks after updating beads CLI. Use after running install_beads.py or when beads behavior seems off.
+description: Full beads CLI upgrade workflow. Use when checking for updates, performing upgrades, or when beads behavior seems off.
 ---
 
 # Upgrading Beads
 
-After upgrading the beads CLI tool, perform these steps to ensure proper operation.
+Complete workflow for checking and upgrading the beads CLI tool.
 
-## Post-Upgrade Checklist
+## Upgrade Workflow
 
-### 1. Check What Changed
-
-```bash
-bd info --whats-new
-```
-
-Review release notes for breaking changes or new features.
-
-### 2. Restart Daemons
+### 1. Check for Updates
 
 ```bash
-bd daemons killall
+python3 scripts/install_beads.py --check --quiet
 ```
 
-Old daemon processes may have stale code. Killing them forces restart with new version.
+Output: `"beads_update_available": true` or `"beads_update_available": false`
 
-### 3. Update Git Hooks
+If no update available, stop here.
+
+### 2. Review Changelog (If /tmp/beads Exists)
+
+Check if local beads repo exists:
+
+```bash
+test -d /tmp/beads && echo "exists" || echo "missing"
+```
+
+**If exists:** Pull latest and dispatch Explore agent for changelog analysis:
+
+```bash
+git -C /tmp/beads pull
+```
+
+Then dispatch Explore agent with prompt:
+```
+Check the beads changelog for versions <current> through <latest>.
+Use `rg "^#+" /tmp/beads/CHANGELOG.md` to get section line offsets.
+Read only the relevant version sections (file is 3k+ lines).
+Report: breaking changes, new features, deprecations.
+```
+
+**If missing:** Stop and report to Mark. Wait for him to reacquire the repo before continuing.
+
+### 3. Run Upgrade
+
+```bash
+python3 scripts/install_beads.py
+```
+
+### 4. Check What Changed
+
+```bash
+bd info --whats-new --json | jq '.recent_changes[:5]'
+```
+
+Review recent changes for breaking changes or new features.
+
+### 5. Update Git Hooks
 
 ```bash
 bd hooks install
@@ -42,27 +74,30 @@ Hooks provide automatic sync between database and JSONL:
 
 **Why hooks matter**: Without hooks, you can commit database changes locally but push stale JSONL to remote, causing sync issues.
 
-### 4. Verify Installation
+### 6. Verify Installation
 
 ```bash
 bd doctor
 ```
 
-Checks for common issues (sync problems, missing hooks, daemon status).
+Checks for common issues (sync problems, missing hooks).
 
 ## When to Use This Skill
 
-- After running `python scripts/install_beads.py`
-- After manual beads binary update
+- Periodic upgrade checks
 - When beads commands behave unexpectedly
 - When hooks seem to not fire
+- After manual beads binary update
 
-## Upgrade Script
-
-This project includes an upgrade helper:
+## Quick Reference
 
 ```bash
-python scripts/install_beads.py          # Install or upgrade
-python scripts/install_beads.py --check  # Check if update available
-python scripts/install_beads.py --force  # Force reinstall
+# Check only
+python3 scripts/install_beads.py --check
+
+# Full upgrade
+python3 scripts/install_beads.py
+
+# Force reinstall
+python3 scripts/install_beads.py --force
 ```
