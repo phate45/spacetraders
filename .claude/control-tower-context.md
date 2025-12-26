@@ -92,7 +92,8 @@ Agents execute in one of two modes based on task type:
 ### Research Tasks (no worktree)
 - Agent runs `begin-research <id>` → claims task, no worktree
 - Agent works read-only on main repo, writes to notes/vault/plans
-- CT closes directly with `bd close <id> -r "summary"` after review
+- CT closes with `bd close <id> -r "summary" --suggest-next --json` after review
+- Check `suggested_next` in response for newly unblocked work
 
 **CT responsibilities (both modes):**
 - Pass task ID to agent
