@@ -178,6 +178,36 @@ def create_worktree(worktree_path: Path, branch_name: str) -> None:
     ])
 
 
+def prime_worktree(worktree_path: Path, project_root: Path) -> None:
+    """
+    Prime worktree with config files that aren't in git.
+
+    Copies specified config files from project root to worktree so that
+    cargo run and other commands work correctly in the isolated environment.
+
+    Args:
+        worktree_path: Path to the worktree
+        project_root: Path to the project root
+    """
+    # Files to copy from project root to worktree
+    # Add new entries here as priming needs expand
+    files_to_prime = {
+        ".spacetraders.toml": ".spacetraders.toml",
+    }
+
+    for source_rel, dest_rel in files_to_prime.items():
+        source = project_root / source_rel
+        dest = worktree_path / dest_rel
+
+        if source.exists():
+            try:
+                # Copy file, preserving permissions
+                dest.write_bytes(source.read_bytes())
+            except Exception as e:
+                # Non-fatal: log error but continue
+                print(f"Warning: Failed to copy {source_rel}: {e}", file=sys.stderr)
+
+
 def set_task_in_progress(task_id: str) -> None:
     """Set task status to in_progress to claim work."""
     run_command(["bd", "update", task_id, "--status", "in_progress"])
@@ -342,6 +372,7 @@ def main():
     if mode == "new":
         branch_name = get_branch_name(task, short_id)
         create_worktree(worktree_path, branch_name)
+        prime_worktree(worktree_path, project_root)
         set_task_in_progress(full_id)
     else:
         # Resume or review mode - worktree already exists
