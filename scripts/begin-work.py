@@ -5,8 +5,9 @@ begin-work.py - Worktree setup for agent task execution
 Creates or detects worktrees for beads tasks and outputs agent-friendly JSON.
 
 Usage:
-    begin-work.py <task-id>           # Implementer mode
-    begin-work.py --review <task-id>  # Reviewer mode
+    begin-work.py <task-id>             # Implementer mode
+    begin-work.py --review <task-id>    # Reviewer mode
+    begin-work.py --research <task-id>  # Research mode
 
 Output JSON:
     {
@@ -26,7 +27,7 @@ Output JSON:
             "worktree_name": "xyz",
             "branch_name": "task/xyz"
         },
-        "mode": "new" | "resume" | "review",
+        "mode": "new" | "resume" | "review" | "research",
         "resume_context": {  // Present when mode="resume" or "review"
             "commits": ["abc123 commit title", ...],  // git log --oneline master..HEAD
             "uncommitted_changes": ["M file.rs", ...],  // git status --short
@@ -273,11 +274,11 @@ def get_resume_context(worktree_path: Path, task: dict) -> dict:
     return context
 
 
-def determine_mode(task: dict, worktree_exists: bool, review_mode: bool = False) -> str:
+def determine_mode(task: dict, worktree_exists: bool, review_mode: bool = False, research_mode: bool = False) -> str:
     """
     Determine work mode based on task status and worktree existence.
 
-    Rules (implementer mode, review_mode=False):
+    Rules (implementer mode, review_mode=False, research_mode=False):
     - status=in_progress + worktree exists = resume
     - status=review + worktree exists = resume (feedback rework)
     - status=open + no worktree = new
@@ -286,8 +287,16 @@ def determine_mode(task: dict, worktree_exists: bool, review_mode: bool = False)
     Rules (reviewer mode, review_mode=True):
     - status=review + worktree exists = review
     - All other combinations are errors
+
+    Rules (research mode, research_mode=True):
+    - Always returns "research"
+    - No worktree validation (research mode doesn't use worktrees)
     """
     status = task.get("status")
+
+    # Research mode: no worktree, just task context
+    if research_mode:
+        return "research"
 
     # Reviewer mode: strict validation
     if review_mode:
@@ -345,8 +354,17 @@ def main():
         action="store_true",
         help="Review mode: validates task is in 'review' status, no status transition"
     )
+    parser.add_argument(
+        "--research",
+        action="store_true",
+        help="Research mode: loads task info without creating worktree, sets status to in_progress"
+    )
 
     args = parser.parse_args()
+
+    # Validate mutually exclusive flags
+    if args.review and args.research:
+        error_exit("Cannot use --review and --research together")
 
     # Get task information
     task = get_task_info(args.task_id)
@@ -354,6 +372,28 @@ def main():
     # Extract IDs
     full_id = task["id"]
     short_id = extract_short_id(full_id)
+
+    # Research mode: skip worktree logic entirely
+    if args.research:
+        # Set task to in_progress and output minimal JSON
+        set_task_in_progress(full_id)
+        comments = get_task_comments(full_id)
+
+        output = {
+            "task": {
+                "id": task["id"],
+                "title": task["title"],
+                "description": task.get("description", ""),
+                "design": task.get("design", ""),
+                "acceptance_criteria": task.get("acceptance_criteria", ""),
+                "notes": task.get("notes", ""),
+                "comments": comments
+            },
+            "mode": "research"
+        }
+
+        print(json.dumps(output, indent=2))
+        return
 
     # Determine paths
     project_root = get_project_root()
@@ -366,7 +406,7 @@ def main():
     original_status = task.get("status")
 
     # Determine mode
-    mode = determine_mode(task, worktree_exists, review_mode=args.review)
+    mode = determine_mode(task, worktree_exists, review_mode=args.review, research_mode=args.research)
 
     # Create worktree if in 'new' mode
     if mode == "new":
