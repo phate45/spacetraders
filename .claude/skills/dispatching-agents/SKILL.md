@@ -40,20 +40,22 @@ Context lives in beads fields. Prompt provides motivation.
 | General implementation | `task-executor` | Language-agnostic implementation workflow |
 | First-gate code review | `task-reviewer` | Verification methodology, comment-based feedback |
 | Codebase exploration | `Explore` (built-in) | Fast context gathering, no task creation needed |
-| Research/scouting | `rust-implementer` or `task-executor` | Creates task, writes findings to notes |
+| Tracked research | `researcher` | Read-only investigation, no worktree, findings to notes |
 
 **Decision tree:**
 
 ```
-Is this Rust code?
-├─ Yes → rust-implementer
+Is this code implementation?
+├─ Yes
+│  ├─ Rust code? → rust-implementer
+│  └─ Other language → task-executor
 └─ No
-   ├─ Is it code review? → task-reviewer
-   ├─ Is it quick exploration (no task needed)? → Explore (built-in)
-   └─ Otherwise → task-executor
+   ├─ Code review? → task-reviewer
+   ├─ Quick exploration (no task)? → Explore (built-in)
+   └─ Tracked research? → researcher
 ```
 
-**Research tasks:** Use implementation agents (rust-implementer/task-executor) with haiku model. They create worktrees, write findings to task notes, and follow the standard workflow. The only difference is model choice and that CT can close directly (no code to review).
+**Research vs Explore:** Use `Explore` for quick ad-hoc lookups with immediate answers. Use `researcher` when findings need to persist in task notes across sessions.
 </agent_selection>
 
 <model_selection>
@@ -100,7 +102,7 @@ Benefits:
 - `notes` — Current state, checkpoints, prior findings
 - `comments` — External feedback, review results
 
-Agents run `begin-work <task-id>` which loads all of this automatically.
+Implementation agents run `begin-work <task-id>`, researcher runs `begin-research <task-id>`. Both load task fields automatically.
 
 **The prompt provides motivation, not context.**
 
@@ -192,20 +194,21 @@ Task(
 ## Research vs Implementation Tasks
 
 **Research tasks** (scouting, exploration, context gathering):
-- Use haiku model (fast, cheap)
-- Agent writes findings to task notes
-- No code changes expected
-- CT can review and close directly (no code to review)
-- Still creates worktree (standard workflow), but no merge needed
+- Use `researcher` agent with haiku model
+- Agent uses `begin-research` (no worktree)
+- Writes findings to task notes and optionally vault/plans
+- CT reviews findings in notes, closes with `bd close -r "summary"`
+- No merge needed (no code changes)
 
 **Implementation tasks** (code changes):
-- Use sonnet model (better code quality)
-- Agent commits code in worktree
-- First-gate review by task-reviewer
+- Use `rust-implementer` or `task-executor` with sonnet model
+- Agent uses `begin-work` (creates worktree)
+- Commits code in worktree
+- First-gate review by `task-reviewer`
 - Second-gate review by Mark
 - Merge via `end-work <id>`
 
-**Key insight:** Research tasks skip the review cycle because there's nothing to review. CT reads the notes, validates findings, closes the task.
+**Key difference:** Research uses `bd close` directly after CT review. Implementation uses `end-work` for merge workflow.
 </research_vs_implementation>
 
 <anti_patterns>
@@ -230,7 +233,7 @@ Task(
 ## Pre-Dispatch Checklist
 
 - [ ] Task exists in beads with description, design, acceptance_criteria populated
-- [ ] Agent type selected (rust-implementer / task-executor / task-reviewer)
+- [ ] Agent type selected (rust-implementer / task-executor / task-reviewer / researcher)
 - [ ] Model selected (haiku for research, sonnet for implementation/review)
 - [ ] Execution mode decided (background preferred)
 - [ ] Prompt is lean (task ID + motivation only)
