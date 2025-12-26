@@ -11,54 +11,59 @@ Session completion protocol. Work is NOT complete until `git push` succeeds.
 
 Execute ALL steps. Do not skip any.
 
-### 1. File Issues for Remaining Work
+### 1. File Issues for Discovered Work
 
-Create beads issues for anything that needs follow-up:
+Create draft issues for anything that needs follow-up. Draft status ensures tasks are refined before becoming available work.
 
 ```bash
 bd create "Remaining work title" -t task -p 2 -d "Description" --json
+bd update <id> --status draft
 ```
 
-Use [creating-tasks](../creating-tasks/SKILL.md) or [discovering-issues](../discovering-issues/SKILL.md) skills for proper issue creation.
+Use [discovering-issues](../discovering-issues/SKILL.md) skill for proper issue discovery patterns.
 
 ### 2. Run Quality Gates (If Code Changed)
 
 **Only if source code was modified.**
 
-Use the `host-executor` MCP server to run cargo commands:
+Delegate to the quality-gate agent to preserve CT context:
 
 ```
-mcp__host-executor__execute_command
-tool: cargo
-args: ["check"]
+Task tool:
+  subagent_type: quality-gate
+  model: haiku
+  prompt: "Verify project state."
 ```
 
-Then `cargo test` and `cargo clippy`.
+**Expected responses:**
+- Pass: `"✓ All quality gates passed"`
+- Fail: `"✗ Quality gate failed: logged in spacetraders-<id>"` (P1 draft task created)
 
 **Skip if:** Only modified documentation, config files, vault notes, or beads metadata.
 
 ### 3. Update Issue Status
 
+**Completed work with worktrees:**
 ```bash
-bd close <id1> <id2> ... -r "Completed"  # Batch close finished work
-bd update <id> --status in_progress      # Update work still active
+end-work <id>  # Handles merge, cleanup, close in one step
 ```
 
-**For in-progress work, update notes for session handoff:**
-
+**Research tasks (no worktree):**
 ```bash
-bd update <id> --notes "COMPLETED: [Specific deliverables done]
-
-IN_PROGRESS: [Current state, what's partially done]
-
-NEXT: [Concrete next step - not vague]
-
-BLOCKERS: [What's preventing progress, if any]
-
-KEY_DECISIONS: [Important user guidance or choices made]"
+bd close <id> -r "Summary of findings"
 ```
 
-Notes survive context compaction. Write as if explaining to a future agent with zero conversation history.
+**In-progress work — add handoff context via comment (preserves agent notes):**
+```bash
+bd comment <id> "SESSION HANDOFF
+
+COMPLETED: [Specific deliverables done]
+IN_PROGRESS: [Current state]
+NEXT: [Concrete next step]
+BLOCKERS: [If any]" --author control-tower --json
+```
+
+Comments survive context compaction. The notes field belongs to the executing agent; CT adds context through comments.
 
 ### 4. Sync and Push (MANDATORY)
 
@@ -97,7 +102,7 @@ Provide context for next session:
 - What's in progress
 - Any blockers or decisions needed
 
-The notes field (step 3) is the **primary handoff mechanism**. Conversation history disappears at session end; notes persist. Write notes as the canonical source of truth for session resumption.
+Task comments (step 3) are the **CT handoff mechanism**. The notes field belongs to agents; CT adds context through comments which preserve agent state. Conversation history disappears at session end; comments persist.
 
 For comprehensive notes patterns and resumability guidelines, see the [beads skill](../beads/SKILL.md).
 

@@ -60,6 +60,8 @@ Skills you use for orchestration (agents don't use these):
 - `rust-implementer` - Rust code implementation (has 2024 edition context)
 - `task-executor` - General implementation work
 - `task-reviewer` - First-gate review of completed work
+- `researcher` - Read-only investigations (no worktree)
+- `quality-gate` - Run quality checks during landing
 
 **Note:** Agent files don't support `@` includes—they're self-contained. `task-executor` and `rust-implementer` share workflow structure; sync manually when updating.
 
@@ -74,22 +76,29 @@ Skills you use for orchestration (agents don't use these):
 **Workflow:**
 1. Create task using `/creating-tasks` skill
 2. Invoke `/dispatching-agents` skill for dispatch decisions
-3. Agent works in isolated worktree, reports completion
+3. Agent executes and reports completion
 
 The `/dispatching-agents` skill covers agent selection, model choice, execution mode, prompt construction, and resume patterns. Invoke it before every dispatch.
 
-## Worktree Workflow
+## Agent Workflow
 
-Agents execute work in git worktrees (see CLAUDE.md). The `begin-work` script handles setup.
-Agents begin working after being dispatched. CT is responsible for the 'wrap up' (see below).
+Agents execute in one of two modes based on task type:
 
-**CT responsibilities:**
+### Implementation Tasks (worktree)
+- Agent runs `begin-work <id>` → creates worktree + branch
+- Agent works in isolated worktree
+- CT runs `end-work <id>` after approval → merge + cleanup + close
+
+### Research Tasks (no worktree)
+- Agent runs `begin-research <id>` → claims task, no worktree
+- Agent works read-only on main repo, writes to notes/vault/plans
+- CT closes directly with `bd close <id> -r "summary"` after review
+
+**CT responsibilities (both modes):**
 - Pass task ID to agent
-- Review work when agent completes (status = `review`) (see below for decision tree)
-- Coordinate merge after approval
-- Clean up worktree after merge
-
-**After approval:** Run `Bash(end-work <id>)` to handle merge, cleanup, and `bd close` in one step.
+- Review work when agent completes (status = `review`)
+- For implementation: coordinate merge via `end-work`
+- For research: close directly after review
 
 ## Review Workflow
 
