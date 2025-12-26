@@ -23,7 +23,8 @@ Output JSON on success:
             "task_closed": true,
             "synced": true,
             "pushed": true
-        }
+        },
+        "suggested_next": ["spacetraders-abc"]  // Newly unblocked tasks (may be empty)
     }
 
 Output JSON on conflict:
@@ -284,14 +285,25 @@ def delete_branch(branch_name: str) -> None:
     run_command(["git", "branch", "-d", branch_name])
 
 
-def close_task(task_id: str) -> None:
+def close_task(task_id: str) -> dict:
     """
-    Close the task in beads.
+    Close the task in beads and get suggested next tasks.
 
     Args:
         task_id: Task ID to close
+
+    Returns:
+        Dict with 'suggested_next' list of newly unblocked task IDs (may be empty)
     """
-    run_command(["bd", "close", task_id, "-r", "Merged to master", "--json"])
+    result = run_command(["bd", "close", task_id, "-r", "Merged to master", "--suggest-next", "--json"])
+
+    try:
+        data = json.loads(result.stdout)
+        # Extract suggested_next from the response if present
+        suggested = data.get("suggested_next", []) if isinstance(data, dict) else []
+        return {"suggested_next": suggested}
+    except json.JSONDecodeError:
+        return {"suggested_next": []}
 
 
 def sync_beads() -> None:
@@ -412,7 +424,7 @@ def main():
     merge_branch(project_root, branch_name)
     remove_worktree(worktree_path)
     delete_branch(branch_name)
-    close_task(full_id)
+    close_result = close_task(full_id)
     sync_beads()
     push_changes(project_root)
 
@@ -432,7 +444,8 @@ def main():
             "task_closed": True,
             "synced": True,
             "pushed": True
-        }
+        },
+        "suggested_next": close_result.get("suggested_next", [])
     }
     print(json.dumps(success_output, indent=2))
 

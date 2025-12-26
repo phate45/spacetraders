@@ -197,8 +197,9 @@ Task(
 - Use `researcher` agent with haiku model
 - Agent uses `begin-research` (no worktree)
 - Writes findings to task notes and optionally vault/plans
-- CT reviews findings in notes, closes with `bd close -r "summary"`
+- CT reviews findings in notes, closes with `bd close -r "summary" --suggest-next --json`
 - No merge needed (no code changes)
+- Check `suggested_next` in response for newly unblocked work
 
 **Implementation tasks** (code changes):
 - Use `rust-implementer` or `task-executor` with sonnet model
