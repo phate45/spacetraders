@@ -27,7 +27,8 @@ Output JSON:
         },
         "post_state": {
             "up_to_date": true,
-            "branch": "master"
+            "branch": "master",
+            "stashes": ["stash@{0}: WIP on master: abc123 commit msg"]
         },
         "session_summary": {
             "in_progress_count": 2,
@@ -232,6 +233,18 @@ def check_work_log_exists() -> tuple[bool, str]:
     return (log_path.exists(), str(log_path))
 
 
+def get_stash_list(project_root: Path) -> list[str]:
+    """Get list of stashed changes."""
+    result = run_command(
+        ["git", "stash", "list"],
+        cwd=project_root,
+        check=False
+    )
+    if isinstance(result, subprocess.CalledProcessError) or not result.stdout.strip():
+        return []
+    return result.stdout.strip().split("\n")
+
+
 def get_session_summary() -> dict:
     """Get counts of issues by status and work log state."""
     summary = {
@@ -329,10 +342,12 @@ def main() -> None:
 
     # Verify state
     up_to_date, branch = verify_up_to_date(project_root)
+    stashes = get_stash_list(project_root)
 
     post_state = {
         "up_to_date": up_to_date,
-        "branch": branch
+        "branch": branch,
+        "stashes": stashes
     }
 
     output = {
