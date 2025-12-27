@@ -82,7 +82,9 @@ The script handles `bd sync`, `git pull --rebase`, `git push`, and verification 
 
 ### 5. Clean Up (if needed)
 
-- Clear stashes: `git stash list` then `git stash drop` if appropriate
+The script reports stashes in `post_state.stashes`. If any exist:
+- Review: are they still needed?
+- Drop if stale: `git stash drop stash@{N}`
 - Prune remote branches if needed
 
 ### 6. Write Work Log
