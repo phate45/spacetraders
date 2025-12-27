@@ -311,6 +311,39 @@ def sync_beads() -> None:
     run_command(["bd", "sync", "--json"])
 
 
+def evaluate_gates() -> dict:
+    """
+    Evaluate timer gates and return results.
+
+    Returns dict with:
+        - evaluated: number of gates checked
+        - closed: list of gate IDs that were closed
+    """
+    result = subprocess.run(
+        ["bd", "gate", "eval"],
+        capture_output=True,
+        text=True,
+    )
+
+    output = result.stdout.strip()
+
+    # Parse the output format
+    if "No open gates" in output:
+        return {"evaluated": 0, "closed": []}
+
+    if "none ready to close" in output:
+        parts = output.split()
+        count = int(parts[1]) if len(parts) > 1 and parts[1].isdigit() else 0
+        return {"evaluated": count, "closed": []}
+
+    if "Closed" in output:
+        lines = output.split("\n")
+        closed_ids = [line.strip() for line in lines[1:] if line.strip()]
+        return {"evaluated": len(closed_ids), "closed": closed_ids}
+
+    return {"evaluated": 0, "closed": []}
+
+
 def handle_uncommitted_changes(project_root: Path) -> bool:
     """
     Check for uncommitted changes in project root and handle beads-only changes.
@@ -424,6 +457,7 @@ def main():
     merge_branch(project_root, branch_name)
     remove_worktree(worktree_path)
     delete_branch(branch_name)
+    gates_result = evaluate_gates()  # Before close_task so unblocked tasks appear in suggested_next
     close_result = close_task(full_id)
     sync_beads()
     push_changes(project_root)
@@ -443,9 +477,11 @@ def main():
             "branch_deleted": True,
             "task_closed": True,
             "synced": True,
+            "gates_evaluated": True,
             "pushed": True
         },
-        "suggested_next": close_result.get("suggested_next", [])
+        "suggested_next": close_result.get("suggested_next", []),
+        "gates_closed": gates_result.get("closed", [])
     }
     print(json.dumps(success_output, indent=2))
 

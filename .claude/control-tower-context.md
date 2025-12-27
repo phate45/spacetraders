@@ -120,9 +120,38 @@ end-work <task-id>
 - Pulls latest master, rebases worktree branch
 - Fast-forward merges to master
 - Removes worktree and branch
+- Evaluates gates (may unblock deferred tasks)
 - Closes task in beads, syncs, pushes
 
 If rebase conflicts occur, the script aborts cleanly and reports conflicting files.
+
+### Gate System Integration
+
+Timer gates defer tasks until a future date. Both lifecycle scripts evaluate gates automatically.
+
+**session-start.py** output includes:
+```json
+{
+  "gates": {"evaluated": 1, "closed": [], "message": "..."},
+  "summary": {"gates_closed": 0, ...}
+}
+```
+
+**end-work** output includes:
+```json
+{
+  "gates_closed": ["spacetraders-xyz"],
+  "suggested_next": ["spacetraders-abc"]  // Includes tasks unblocked by gates
+}
+```
+
+**Creating a timer gate:**
+```bash
+bd gate create --await timer:168h  # 1 week (use hours, not days)
+bd dep add <task-to-defer> <gate-id>
+```
+
+Gate evaluation happens automatically at session start and after each `end-work`.
 
 ## Review Workflow
 
