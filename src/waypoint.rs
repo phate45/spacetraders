@@ -106,13 +106,11 @@ impl Waypoint {
             }
         }
 
-        if let Some(modifiers) = &self.modifiers {
-            if !modifiers.is_empty() {
-                println!("\nModifiers:");
-                for modifier in modifiers {
-                    println!("  - {} ({})", modifier.name, modifier.symbol);
-                    println!("    {}", modifier.description);
-                }
+        if let Some(modifiers) = &self.modifiers && !modifiers.is_empty() {
+            println!("\nModifiers:");
+            for modifier in modifiers {
+                println!("  - {} ({})", modifier.name, modifier.symbol);
+                println!("    {}", modifier.description);
             }
         }
     }

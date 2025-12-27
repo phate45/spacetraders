@@ -70,8 +70,8 @@ async fn main() -> Result<()> {
                 // System symbol is the first two parts: "X1-DF55"
                 let headquarters = &agent.headquarters;
                 let system_symbol = headquarters
-                    .rsplitn(2, '-')
-                    .nth(1)
+                    .rsplit_once('-')
+                    .map(|(left, _)| left)
                     .unwrap_or(headquarters);
 
                 println!("\nFetching waypoint information for headquarters...");
