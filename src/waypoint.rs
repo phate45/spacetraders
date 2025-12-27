@@ -1,6 +1,7 @@
+use anyhow::Result;
 use serde::Deserialize;
 
-use crate::client::{ApiResponse, BASE_URL};
+use crate::client::SpaceTradersClient;
 
 /// Waypoint information from /systems/:systemSymbol/waypoints/:waypointSymbol endpoint
 #[derive(Debug, Deserialize)]
@@ -120,7 +121,7 @@ impl Waypoint {
 /// Fetch waypoint information from /systems/:systemSymbol/waypoints/:waypointSymbol endpoint
 ///
 /// # Arguments
-/// * `agent_token` - The Bearer token for authentication
+/// * `client` - The SpaceTraders API client
 /// * `system_symbol` - The system symbol (e.g., "X1-DF55")
 /// * `waypoint_symbol` - The waypoint symbol (e.g., "X1-DF55-20250Z")
 ///
@@ -128,27 +129,10 @@ impl Waypoint {
 /// * `Ok(Waypoint)` - The waypoint information
 /// * `Err` - If the request fails (invalid system, invalid waypoint, auth failure, etc.)
 pub async fn fetch_waypoint(
-    agent_token: &str,
+    client: &SpaceTradersClient,
     system_symbol: &str,
     waypoint_symbol: &str,
-) -> Result<Waypoint, Box<dyn std::error::Error>> {
-    let client = reqwest::Client::new();
-    let url = format!("{}/systems/{}/waypoints/{}", BASE_URL, system_symbol, waypoint_symbol);
-
-    let response = client
-        .get(&url)
-        .header("Content-Type", "application/json")
-        .bearer_auth(agent_token)
-        .send()
-        .await?;
-
-    let status = response.status();
-
-    if !status.is_success() {
-        let error_body = response.text().await?;
-        return Err(format!("Failed to fetch waypoint ({}): {}", status, error_body).into());
-    }
-
-    let api_response: ApiResponse<Waypoint> = response.json().await?;
-    Ok(api_response.data)
+) -> Result<Waypoint> {
+    let path = format!("/systems/{}/waypoints/{}", system_symbol, waypoint_symbol);
+    client.get(&path).await
 }
