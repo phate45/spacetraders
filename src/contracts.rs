@@ -1,6 +1,6 @@
 use serde::Deserialize;
 
-use crate::client::{ApiResponse, BASE_URL};
+use crate::client::SpaceTradersClient;
 
 /// Contract between agent and faction
 #[derive(Debug, Deserialize)]
@@ -86,107 +86,57 @@ impl Contract {
 /// List all contracts for the agent from /my/contracts endpoint
 ///
 /// # Arguments
-/// * `agent_token` - The Bearer token for authentication
+/// * `client` - The SpaceTraders API client
 ///
 /// # Returns
 /// * `Ok(Vec<Contract>)` - List of contracts
 /// * `Err` - If the request fails
-pub async fn list_contracts(agent_token: &str) -> Result<Vec<Contract>, Box<dyn std::error::Error>> {
-    let client = reqwest::Client::new();
-    let url = format!("{}/my/contracts", BASE_URL);
-
-    let response = client
-        .get(&url)
-        .header("Content-Type", "application/json")
-        .bearer_auth(agent_token)
-        .send()
-        .await?;
-
-    let status = response.status();
-
-    if !status.is_success() {
-        let error_body = response.text().await?;
-        return Err(format!("Failed to list contracts ({}): {}", status, error_body).into());
-    }
-
-    let api_response: ApiResponse<Vec<Contract>> = response.json().await?;
-    Ok(api_response.data)
+pub async fn list_contracts(client: &SpaceTradersClient) -> anyhow::Result<Vec<Contract>> {
+    client.get("/my/contracts").await
 }
 
 /// Accept a contract from /my/contracts/:contractId/accept endpoint
 ///
 /// # Arguments
-/// * `agent_token` - The Bearer token for authentication
+/// * `client` - The SpaceTraders API client
 /// * `contract_id` - The contract ID to accept
 ///
 /// # Returns
 /// * `Ok(Contract)` - The updated contract after acceptance
 /// * `Err` - If the request fails (invalid contract, already accepted, etc.)
 pub async fn accept_contract(
-    agent_token: &str,
+    client: &SpaceTradersClient,
     contract_id: &str,
-) -> Result<Contract, Box<dyn std::error::Error>> {
-    let client = reqwest::Client::new();
-    let url = format!("{}/my/contracts/{}/accept", BASE_URL, contract_id);
-
-    let response = client
-        .post(&url)
-        .header("Content-Type", "application/json")
-        .bearer_auth(agent_token)
-        .send()
-        .await?;
-
-    let status = response.status();
-
-    if !status.is_success() {
-        let error_body = response.text().await?;
-        return Err(format!("Failed to accept contract ({}): {}", status, error_body).into());
-    }
-
+) -> anyhow::Result<Contract> {
     #[derive(Debug, Deserialize)]
     struct AcceptContractResponse {
         contract: Contract,
     }
 
-    let api_response: ApiResponse<AcceptContractResponse> = response.json().await?;
-    Ok(api_response.data.contract)
+    let path = format!("/my/contracts/{}/accept", contract_id);
+    let response: AcceptContractResponse = client.post(&path).await?;
+    Ok(response.contract)
 }
 
 /// Negotiate a new contract from /my/ships/:shipSymbol/negotiate/contract endpoint
 ///
 /// # Arguments
-/// * `agent_token` - The Bearer token for authentication
+/// * `client` - The SpaceTraders API client
 /// * `ship_symbol` - The ship symbol to use for negotiation
 ///
 /// # Returns
 /// * `Ok(Contract)` - The newly negotiated contract
 /// * `Err` - If the request fails (invalid ship, no negotiation available, etc.)
 pub async fn negotiate_contract(
-    agent_token: &str,
+    client: &SpaceTradersClient,
     ship_symbol: &str,
-) -> Result<Contract, Box<dyn std::error::Error>> {
-    let client = reqwest::Client::new();
-    let url = format!("{}/my/ships/{}/negotiate/contract", BASE_URL, ship_symbol);
-
-    let response = client
-        .post(&url)
-        .header("Content-Type", "application/json")
-        .bearer_auth(agent_token)
-        .send()
-        .await?;
-
-    let status = response.status();
-
-    if !status.is_success() {
-        let error_body = response.text().await?;
-        return Err(format!("Failed to negotiate contract ({}): {}", status, error_body).into());
-    }
-
+) -> anyhow::Result<Contract> {
     #[derive(Debug, Deserialize)]
     struct NegotiateContractResponse {
         contract: Contract,
     }
 
-    let api_response: ApiResponse<NegotiateContractResponse> = response.json().await?;
-    Ok(api_response.data.contract)
+    let path = format!("/my/ships/{}/negotiate/contract", ship_symbol);
+    let response: NegotiateContractResponse = client.post(&path).await?;
+    Ok(response.contract)
 }
