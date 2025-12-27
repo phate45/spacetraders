@@ -16,7 +16,8 @@ Mark (human)
         │   └── task-reviewer    → First-gate review
         │
         ├── Research (no worktree)
-        │   └── researcher       → Read-only investigation
+        │   ├── researcher       → Fact-gathering (haiku)
+        │   └── plan-researcher  → Design research (sonnet)
         │
         ├── Utility (no worktree)
         │   └── quality-gate     → Landing verification
@@ -36,7 +37,8 @@ Mark (human)
 | task-executor | [`.claude/agents/task-executor.md`](.claude/agents/task-executor.md) | [`/agent-working`](.claude/skills/agent-working/SKILL.md) | General implementation |
 | rust-implementer | [`.claude/agents/rust-implementer.md`](.claude/agents/rust-implementer.md) | [`/agent-working`](.claude/skills/agent-working/SKILL.md) | Rust code (has 2024 edition context) |
 | task-reviewer | [`.claude/agents/task-reviewer.md`](.claude/agents/task-reviewer.md) | [`/agent-reviewing`](.claude/skills/agent-reviewing/SKILL.md) | First-gate review |
-| researcher | [`.claude/agents/researcher.md`](.claude/agents/researcher.md) | [`/agent-researching`](.claude/skills/agent-researching/SKILL.md) | Read-only investigation |
+| researcher | [`.claude/agents/researcher.md`](.claude/agents/researcher.md) | [`/agent-researching`](.claude/skills/agent-researching/SKILL.md) | Fact-gathering (haiku) |
+| plan-researcher | [`.claude/agents/plan-researcher.md`](.claude/agents/plan-researcher.md) | [`/agent-researching`](.claude/skills/agent-researching/SKILL.md) | Design research (sonnet) |
 | quality-gate | [`.claude/agents/quality-gate.md`](.claude/agents/quality-gate.md) | — | Landing verification |
 | plan-to-beads | [`.claude/agents/plan-to-beads.md`](.claude/agents/plan-to-beads.md) | — | Convert plans to epic + tasks |
 
@@ -209,12 +211,16 @@ CT uses `/planning-work` skill for multi-task features:
 ```
 Mark: "Let's build X"
   → CT creates epic (container)
-  → Research tasks + researcher agents (parallelized)
-  → EnterPlanMode → write plan document
-  → ExitPlanMode (approval)
+  → Scope establishment (conversational)
+  → Research tasks + researcher/plan-researcher agents (parallelized)
+  → Write plan document to plans/
+  → AskUserQuestion approval gate
   → plan-to-beads agent → epic + tasks
+  → Verify with bd graph
   → Execution from bd ready
 ```
+
+**Note:** The skill provides its own "planning mode" discipline. Do NOT use `EnterPlanMode`—it breaks subagent execution.
 
 **Reference:** [`/planning-work`](.claude/skills/planning-work/SKILL.md)
 
@@ -256,7 +262,8 @@ git branch -d task/<id>              # Deletes branch
 │   ├── task-executor.md      # Implementation agent
 │   ├── rust-implementer.md   # Rust-specific implementation
 │   ├── task-reviewer.md      # First-gate review
-│   ├── researcher.md         # Read-only investigation
+│   ├── researcher.md         # Fact-gathering (haiku)
+│   ├── plan-researcher.md    # Design research (sonnet)
 │   ├── quality-gate.md       # Landing verification
 │   └── plan-to-beads.md      # Plan → epic + tasks
 ├── skills/

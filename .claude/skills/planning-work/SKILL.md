@@ -1,15 +1,39 @@
 ---
 name: planning-work
-description: Orchestrate full planning workflow from idea to actionable beads epic. Use when Mark wants to plan, build, or design multi-task features.
+description: Orchestrate full planning workflow from idea to actionable beads epic. Use when Mark wants to plan, build, design, or implement multi-task features.
 ---
 
 # Planning Work
 
 Orchestrate the full planning workflow: from idea to actionable beads epic with implementation-ready tasks.
 
+## Planning Mode
+
+**THIS SKILL IS YOUR PLANNING MODE.** When you invoke this skill, you enter a planning-focused workflow.
+
+### EnterPlanMode is FORBIDDEN
+
+**YOU MUST NEVER call EnterPlanMode.** This skill provides specialized guidance that replaces Claude Code's built-in plan mode.
+
+EnterPlanMode + this skill = broken subagents. Every time.
+
+The built-in plan mode alters your system prompt in ways that prevent subagents from executing their tasks. They get stuck "waiting for permission" that never comes. This skill gives you the same discipline without the subagent interference.
+
+### Planning Mode Discipline
+
+**While in this workflow, YOU MUST:**
+- Focus on exploration and design, not implementation
+- NEVER write source code (read-only exploration only)
+- NEVER create or modify files outside `plans/`
+- Use Read, Grep, Glob for codebase exploration
+- Delegate research to agents (they execute normally)
+- Use AskUserQuestion for clarifications and approval gates
+
+**Exit planning mode** by completing Phase 8 (present epic for execution decision).
+
 ## When to Invoke
 
-Trigger on: "plan", "build", "design", "let's work on X", or any request requiring multi-task implementation.
+Trigger on: "plan", "build", "design", "let's work on X", "implement X", or any request requiring multi-task implementation.
 
 ## Critical Context
 
@@ -22,12 +46,19 @@ Do NOT assume the executing CT will remember planning discussions. Everything go
 
 ## Workflow
 
-### 1. Create Epic Upfront
+### Phase 1: Initialize Epic
 
-Before any research or planning, create the containing epic:
+**For new work:** Create the containing epic before any exploration:
 
 ```bash
-bd create --title "[Feature/Goal Name]" --type epic --priority 1 --json
+bd create --title "[Feature/Goal Name]" --type epic --priority 2 --json
+```
+
+**For refining existing tasks:** Read the task first, then convert to epic:
+
+```bash
+bd show <task-id> --json  # Understand current scope
+bd update <task-id> --type epic --json  # Convert to epic container
 ```
 
 This epic will contain:
@@ -36,17 +67,30 @@ This epic will contain:
 
 Record the epic ID—all subsequent tasks use `--parent <epic-id>`.
 
-### 2. Enter Plan Mode
+### Phase 2: Scope Establishment (Conversational)
 
-```
-EnterPlanMode
-```
+**BEFORE deep research**, establish the broad goal and scope with Mark through natural conversation. Research without scope alignment = wasted context. Every time.
 
-Use Claude's first-class planning infrastructure. Do NOT reinvent.
+**Discuss with Mark:**
+- What problem are we solving?
+- What are the boundaries (in scope vs out of scope)?
+- Are there known constraints or preferences?
+- What does success look like?
 
-### 3. Research Phase (CT-Style)
+This is conversational—ask clarifying questions, propose scope boundaries, get confirmation. Do NOT use AskUserQuestion here; save that tool for later phases when you have specific options to present based on research findings.
 
-Research uses **tracked tasks and researcher agents**, not ad-hoc exploration.
+**Document the agreed scope before deep research.** A few sentences capturing the goal and boundaries is sufficient. Misaligned research wastes agent context and your planning budget.
+
+### Phase 3: Research Phase
+
+Research uses **tracked tasks and specialized agents**, not ad-hoc exploration.
+
+**Two types of research:**
+
+| Type | Agent | Model | Use When |
+|------|-------|-------|----------|
+| Fact-gathering | researcher | haiku | Quick questions: "Where is X defined?", "What modules use Y?" |
+| Design research | plan-researcher | sonnet | Building implementation case: "Design approach for X", "Analyze patterns for Y" |
 
 **For each research question:**
 
@@ -56,29 +100,64 @@ Research uses **tracked tasks and researcher agents**, not ad-hoc exploration.
      --description "Investigate [question]. Document findings for planning." --json
    ```
 
-2. **Dispatch researcher agent to execute it:**
+2. **Dispatch appropriate agent:**
+
+   For fact-gathering (haiku):
    ```
    Task(
      subagent_type: "researcher",
      model: "haiku",
-     prompt: "Execute research task <task-id>. Invoke /agent-researching skill first.",
-     ...
+     prompt: "Execute research task <task-id>. Invoke /agent-researching skill first.
+
+   Gather facts efficiently. Answer the research question directly."
    )
    ```
 
-The researcher will:
-- Claim the task via `begin-research <id>`
-- Investigate and write findings to task notes
-- Return findings summary to CT
+   For design research (sonnet):
+   ```
+   Task(
+     subagent_type: "plan-researcher",
+     prompt: "Execute research task <task-id>. Invoke /agent-researching skill first.
 
-**Parallelize aggressively** where appropriate. Create multiple research tasks, then dispatch multiple researcher agents in a single message. They run concurrently.
-After research completes, synthesize findings from task notes into the plan.
-Multiple rounds of research to answer questions that arise from the preceding round(s) is encouraged. You don't need to find all answers at once.
-However, _consult the results with Mark to gain insight in between_. This will help you decide what _exactly_ you need to research further, preventing wasting of resources and Mark's time.
+   Approach this as a software architect:
+   1. Understand requirements from the task
+   2. Explore thoroughly - find patterns, conventions, similar features
+   3. Design solution considering trade-offs
+   4. End notes with Critical Files section (3-5 files for implementation)"
+   )
+   ```
 
-### 4. Write Plan Document
+**Parallelize aggressively** where appropriate. Create multiple research tasks, dispatch multiple agents in a single message.
 
-Structure each phase for direct beads translation:
+**Between research rounds**, consult with Mark:
+- Use AskUserQuestion to present findings and open questions
+- Get direction on which areas need deeper investigation
+- Validate assumptions before proceeding
+
+**Example mid-research check-in:**
+```
+AskUserQuestion([
+  {
+    question: "Based on initial research, I found [X]. Should we investigate [A] or [B] next?",
+    header: "Direction",
+    options: [
+      { label: "Investigate A", description: "Focus on [reason]" },
+      { label: "Investigate B", description: "Focus on [reason]" },
+      { label: "Both in parallel", description: "If time permits" }
+    ]
+  }
+])
+```
+
+Multiple rounds of research are encouraged. You don't need to find all answers at once.
+
+### Phase 4: Write Plan Document
+
+After research completes, synthesize findings into a plan document.
+
+**Location:** `plans/[feature-name].md`
+
+**Structure each phase for direct beads translation:**
 
 ```markdown
 # Plan: [Feature Name]
@@ -89,7 +168,7 @@ Structure each phase for direct beads translation:
 
 ## Motivation
 
-[The overall goal and expectations of the epic. High level view on the whole feature, unifying the scope of all the individual phases below.]
+[The overall goal and expectations. High level view unifying all phases.]
 
 ## Files
 
@@ -111,15 +190,15 @@ Structure each phase for direct beads translation:
 [Becomes task acceptance_criteria field.]
 
 **Parallel:** yes|no
-[Can this run concurrently with other phases? Default: no (sequential)]
+[Can this run concurrently with other phases? Default: no]
 
 ### Phase 2: [Title]
 ...
 ```
 
-### 5. Scope Validation
+### Phase 5: Scope Validation
 
-Before exiting plan mode, verify EVERY phase has:
+Before seeking approval, verify EVERY phase has:
 - Actionable description (not "figure out X")
 - Clear design approach (not "TBD")
 - Verifiable acceptance criteria (not "works correctly")
@@ -132,40 +211,109 @@ Push back:
 
 Do NOT create placeholder tasks for undefined work. Incomplete planning means incomplete scope.
 
-### 6. Exit Plan Mode
+### Phase 6: Plan Approval Gate
+
+**Use AskUserQuestion to get explicit approval:**
 
 ```
-ExitPlanMode
+AskUserQuestion([
+  {
+    question: "Plan is ready at plans/[name].md. Approve to convert to beads tasks?",
+    header: "Approval",
+    options: [
+      { label: "Approve", description: "Convert plan to epic with implementation tasks" },
+      { label: "Revise", description: "Need changes before approval" }
+    ]
+  }
+])
 ```
 
-Wait for Mark's approval of the plan (required Claude Code step).
+If "Revise" selected, discuss changes and update the plan document. Re-validate and re-submit for approval.
 
-### 7. Convert Plan to Tasks (MANDATORY)
+**Do NOT proceed to Phase 7 until explicitly approved.** Proceeding without approval = wasted conversion work when Mark requests changes.
 
-**Immediately after approval**, invoke the plan-to-beads agent:
+### Phase 7: Convert Plan to Tasks
+
+**IMMEDIATELY after approval**, analyze the plan's phase structure and invoke the plan-to-beads agent. Do NOT pause between approval and conversion—momentum matters.
+
+**Determine expected layer structure:**
+
+Before dispatching, analyze your phases:
+1. Count total phases
+2. Identify which are sequential vs parallel
+3. Build expected layer structure
+
+Example for 5 sequential phases:
+```
+Expected layers:
+- Layer 0: [Phase 1] (ready)
+- Layer 1: [Phase 2]
+- Layer 2: [Phase 3]
+- Layer 3: [Phase 4]
+- Layer 4: [Phase 5]
+MaxLayer: 4
+```
+
+Example with parallel phases (3 and 4 parallel after 2):
+```
+Expected layers:
+- Layer 0: [Phase 1] (ready)
+- Layer 1: [Phase 2]
+- Layer 2: [Phase 3, Phase 4] (parallel)
+- Layer 3: [Phase 5]
+MaxLayer: 3
+```
+
+**Dispatch with verification target:**
 
 ```
 Task(
   subagent_type: "plan-to-beads",
-  prompt: "Convert plan at [path] to beads tasks under epic <epic-id>.",
-  ...
+  prompt: "Convert plan at plans/[name].md to beads tasks under epic <epic-id>.
+
+Expected dependency structure (verify with bd graph):
+- Total phases: N
+- Layer 0: [Phase 1 title] (ready)
+- Layer 1: [Phase 2 title] (depends on Phase 1)
+- Layer 2: [Phase 3 title] (depends on Phase 2)
+...
+- MaxLayer: N-1
+
+Verify the graph matches this structure before reporting success."
 )
 ```
 
-This agent:
-- Updates epic description with final summary
-- Creates implementation tasks with proper fields
-- Wires dependencies (sequential and parallel based on plan)
-- Tasks are OPEN status, ready for execution
-- Returns epic structure for approval
+**After agent returns**, verify the structure yourself:
 
-### 8. Approve and Execute
+```bash
+bd graph <epic-id> --json
+bd ready --parent <epic-id> --json
+```
 
-Present the epic structure to Mark. Once approved:
-- Research tasks are closed (planning complete)
-- Implementation tasks are open and ready
-- `bd ready --parent <epic-id>` shows available work
-- Fresh CT session can orchestrate execution
+Fix any discrepancies before proceeding.
+
+### Phase 8: Present for Execution Decision
+
+Present the completed epic structure to Mark:
+
+```
+Epic: [title] (<epic-id>)
+
+Tasks created:
+- [Phase 1] (<id>) - ready
+- [Phase 2] (<id>) - blocked by <prev>
+- ...
+
+Research tasks closed: N
+Implementation tasks ready: M
+
+Next steps:
+A) Execute now - dispatch agents to begin implementation
+B) Start fresh session - orchestrate execution with full context
+C) Defer - work is tracked, pick up later
+```
+
+**This concludes planning mode.** Mark decides how to proceed with execution.
 
 ## Plan Document Location
 
@@ -173,31 +321,39 @@ Write plans to: `plans/[feature-name].md` in the project root.
 
 This keeps plans accessible across sessions and provides reference during execution.
 
-## Anti-Patterns
+## Anti-Patterns (Failure Modes)
 
-| Anti-Pattern | Why It's Wrong |
-|--------------|----------------|
-| Skip epic creation | Research tasks have no container; workflow not tracked |
-| Dispatch researcher without task | No tracking; findings not persisted; like using Explore |
-| Use Explore instead of researcher agents | CT consumes context that should be preserved |
-| Vague phase descriptions | Tasks won't be actionable; execution will stall |
-| Skip plan-to-beads conversion | Plan exists only as markdown; no execution tracking |
-| Create tasks as draft | Delays execution; planning should produce ready work |
-| Plan without parallelization analysis | Missed optimization; sequential when parallel possible |
+These patterns cause planning failures. Every time.
+
+| Anti-Pattern | What Happens |
+|--------------|--------------|
+| Call EnterPlanMode | Subagents freeze. They can't execute. Session stalls. |
+| Skip epic creation | Research floats untracked. Findings get lost across sessions. |
+| Skip scope establishment | Hours of research on wrong problem. Start over. |
+| Dispatch researcher without task | No notes field. Findings vanish when agent returns. |
+| Use Explore instead of researcher agents | CT context bloats. Planning budget exhausted early. |
+| Skip mid-research check-ins | Discover misalignment at Phase 4. Redo everything. |
+| Vague phase descriptions | Implementing agent asks "what does this mean?" Blocks. |
+| Skip plan approval gate | Mark rejects at execution time. All planning wasted. |
+| Skip plan-to-beads conversion | Plan exists in markdown. No one executes it. |
+| Skip graph verification | Wrong task unblocks. Parallel work creates conflicts. |
 
 ## Quick Reference
 
 ```bash
 # Create containing epic
-bd create --title "Feature X" --type epic --priority 1 --json
+bd create --title "Feature X" --type epic --priority 2 --json
+
+# Convert existing task to epic
+bd update <task-id> --type epic --json
 
 # Create research task under epic
 bd create --title "Research: Y" --type task --parent <epic-id> \
   --description "Investigate [question]" --json
 
-# After planning, check epic structure
-bd show <epic-id> --json
-bd list --parent <epic-id> --json
+# After planning, verify epic structure
+bd graph <epic-id> --json
+bd ready --parent <epic-id> --json
 
 # Start execution
 bd ready --parent <epic-id> --json

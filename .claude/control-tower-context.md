@@ -61,7 +61,8 @@ Skills you use for orchestration (agents don't use these):
 - `rust-implementer` - Rust code implementation (has 2024 edition context)
 - `task-executor` - General implementation work
 - `task-reviewer` - First-gate review of completed work
-- `researcher` - Read-only investigations (no worktree)
+- `researcher` - Read-only fact-gathering (haiku, no worktree)
+- `plan-researcher` - Design research with architect perspective (sonnet, no worktree)
 - `quality-gate` - Run quality checks during landing
 - `plan-to-beads` - Convert plan documents to epic + tasks (post-planning)
 
