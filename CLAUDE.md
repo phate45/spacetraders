@@ -24,7 +24,11 @@ When implementing API endpoints, check these local schemas first before making t
 
 **Unsure about working directory?** Run `pwd` first.
 
+**When filesystem commands behave unexpectedly** (directory should exist but `cd` returns "not found", file operations fail mysteriously): STOP. Run `pwd` and reorient yourself immediately. You may have drifted into an unexpected directory.
+
 Do NOT use defensive patterns like `git -C /path` or `cd /path && git ...`—these break permission matching and trigger unnecessary approval prompts. Every time.
+
+Do NOT chain commands with `&&` when the first command changes directory or state. Run them as separate Bash invocations instead.
 
 **Scripts restriction:** Do NOT execute scripts in `scripts/` without explicit direction from Mark or a skill. These are project utilities that require intentional invocation.
 
@@ -79,6 +83,13 @@ If you find bugs, TODOs, or follow-up work while implementing, use:
 Agent work happens in isolated git worktrees:
 - **Location:** `./worktrees/<task-id>` (e.g., `./worktrees/q4x`)
 - **Branch naming:** `<type>/<id>` (e.g., `task/q4x`, `feature/abc`)
+
+**Worktree path ↔ branch name correspondence:** The worktree directory name matches the task ID, which matches the branch name suffix. If you're looking for `worktrees/4dl.6`, the branch is `feature/4dl.6`. This redundancy helps verify you're in the right place.
+
+**If worktree navigation fails:**
+1. Run `ls /home/phate/BigProjects/spacetraders/worktrees/` to see what actually exists
+2. Run `git worktree list` to see registered worktrees with their paths
+3. Compare against expected task ID—typos happen (e.g., `4dl` vs `4dl.6`)
 
 ## Host Executor MCP
 

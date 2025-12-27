@@ -91,6 +91,16 @@ begin-review <id>
 cd <worktree_path> && pwd
 ```
 
+Verify `pwd` output shows the correct worktree path before proceeding.
+
+**If worktree navigation fails** (directory not found):
+1. Run `ls /home/phate/BigProjects/spacetraders/worktrees/` to see what exists
+2. Run `git worktree list` to see registered worktrees with paths
+3. Verify task ID matches exactly (e.g., `4dl.6` not `4dl`)
+4. The worktree directory name = task ID = branch name suffix
+
+**Do NOT try to `git checkout` or `git switch` to access the branch.** The worktree IS the branch—you just need to be in the worktree directory. If the worktree doesn't exist, STOP and report to Control Tower.
+
 All subsequent git commands run in this directory—no `-C` flags needed.
 
 **3. Review Deliverables**
@@ -217,7 +227,12 @@ Your summary is just a pointer. The comment contains the audit trail. Always add
 ```
 Error: worktree doesn't exist / permission denied
 ```
-STOP. Return to Control Tower with error. Don't improvise or check main repo instead.
+Before giving up, verify:
+1. `ls /home/phate/BigProjects/spacetraders/worktrees/` — does the directory exist?
+2. `git worktree list` — is the worktree registered?
+3. Check for task ID typos (e.g., `4dl` vs `4dl.6`)
+
+If the worktree genuinely doesn't exist: STOP. Return to Control Tower with error. Don't improvise or check main repo instead.
 
 **Git commands fail:**
 ```

@@ -2,6 +2,15 @@
 
 Agents work in isolated worktrees at `./worktrees/<task-id>`. After entering the worktree, different tools have different path requirements.
 
+## Worktree ↔ Branch Name Correspondence
+
+The worktree directory name, task ID, and branch name suffix are all the same:
+- **Task ID:** `spacetraders-4dl.6`
+- **Worktree:** `./worktrees/4dl.6`
+- **Branch:** `feature/4dl.6`
+
+This redundancy is intentional. Use it to verify you're in the right place. If `git branch` shows `feature/4dl.6` but you're trying to navigate to `worktrees/4dl`, you have a typo.
+
 ## Tool Path Behavior
 
 | Tool Type | Path Style | Example |

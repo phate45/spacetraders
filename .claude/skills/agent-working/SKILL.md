@@ -154,6 +154,14 @@ cd <worktree_path> && pwd
 
 Verify `pwd` output shows `<repo>/worktrees/<id>` before proceeding.
 
+**Do NOT chain `cd` with commands that modify files or require permission checks** (e.g., `cd <path> && rm ...`, `cd <path> && git commit ...`). The permission system evaluates the composite command before `cd` takes effect, causing unexpected denials. Run modifying commands separately after confirming your location with `pwd`.
+
+**If worktree navigation fails** (directory not found, permission denied):
+1. Run `ls /home/phate/BigProjects/spacetraders/worktrees/` to see what exists
+2. Run `git worktree list` to see registered worktrees
+3. Verify your task ID matches exactly (e.g., `4dl.6` not `4dl`)
+4. The worktree directory name = task ID = branch name suffix
+
 **File path requirements:** See `shared/worktree-paths.md` for full details.
 
 - **Shell tools** (rg, git, etc.): Relative paths work after `cd`
@@ -346,7 +354,14 @@ When all acceptance criteria are met:
    - `feat(xyz): add dark mode toggle`
    - `fix(123): resolve null pointer in parser`
 
-2. **Final status update with notes:**
+2. **Verify commit succeeded:**
+   ```bash
+   git status
+   ```
+
+   **CRITICAL:** Before marking task as review, verify `git status` shows clean working tree (no uncommitted changes). If you have uncommitted changes, your work will be lost when the worktree is removed. Do NOT proceed to status update until commit is verified.
+
+3. **Final status update with notes:**
    ```bash
    bd update <task-id> --status review --notes "COMPLETED: [all deliverables summary]
 
@@ -519,6 +534,7 @@ See `shared/beads-field-reference.md` for full field semantics.
 ```
 - [ ] All acceptance criteria verified
 - [ ] Final commit: git add -A && git commit -m "..."
+- [ ] Verify clean: git status shows no uncommitted changes
 - [ ] All TodoWrite items completed
 - [ ] Set status with notes: bd update <id> --status review --notes "..." --json
 - [ ] Report deliverables in output (file paths, decisions)
@@ -561,6 +577,7 @@ Agent workflow is successful when:
 
 **Completion:**
 - [ ] All acceptance criteria verified (tracked in notes CRITERIA section)
+- [ ] Work committed (`git status` shows clean working tree)
 - [ ] Status set to `review`
 - [ ] Deliverables reported with file paths
 - [ ] Key decisions documented

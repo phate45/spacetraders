@@ -226,6 +226,9 @@ Task(
 | Guess at model selection | Follow the model selection table |
 | Dispatch parallel when tasks touch same files | Use sequential execution |
 | Skip task creation for significant work | Everything flows through task graph |
+| Tell agent to skip `begin-work` | **NEVER**. Always let agent run `begin-work` |
+
+**CRITICAL: Never tell agents to skip `begin-work`.** Even if a worktree already exists, `begin-work` provides essential context grounding—task fields, workspace confirmation, resume detection. Skipping it causes agents to lose orientation and miss critical state. If you think skipping saves time, you're wrong—you'll spend more time debugging confused agents.
 
 **The IC trap:** Personally gathering context, figuring out patterns, then creating "perfectly-scoped" tasks. This is still IC behavior with extra steps. Context gathering is a task. Delegate it.
 </anti_patterns>
