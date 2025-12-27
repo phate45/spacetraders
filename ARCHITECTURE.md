@@ -18,8 +18,11 @@ Mark (human)
         ├── Research (no worktree)
         │   └── researcher       → Read-only investigation
         │
-        └── Utility (no worktree)
-            └── quality-gate     → Landing verification
+        ├── Utility (no worktree)
+        │   └── quality-gate     → Landing verification
+        │
+        └── Planning (no worktree)
+            └── plan-to-beads    → Convert plans to epic + tasks
 ```
 
 **Control Tower (CT)** orchestrates work through task graphs. It delegates focused work to specialized subagents, synthesizes their outputs, and maintains session continuity.
@@ -35,6 +38,7 @@ Mark (human)
 | task-reviewer | [`.claude/agents/task-reviewer.md`](.claude/agents/task-reviewer.md) | [`/agent-reviewing`](.claude/skills/agent-reviewing/SKILL.md) | First-gate review |
 | researcher | [`.claude/agents/researcher.md`](.claude/agents/researcher.md) | [`/agent-researching`](.claude/skills/agent-researching/SKILL.md) | Read-only investigation |
 | quality-gate | [`.claude/agents/quality-gate.md`](.claude/agents/quality-gate.md) | — | Landing verification |
+| plan-to-beads | [`.claude/agents/plan-to-beads.md`](.claude/agents/plan-to-beads.md) | — | Convert plans to epic + tasks |
 
 ### Agent File Structure
 
@@ -196,7 +200,23 @@ Skills declare dependencies via `<mandatory_reading>` sections:
 Control Tower receives additional context not available to subagents:
 
 - [`.claude/control-tower-context.md`](.claude/control-tower-context.md) — Communication style, delegation model, session protocol
-- CT skills: `/creating-tasks`, `/landing-the-plane`, `/writing-work-logs`
+- CT skills: `/planning-work`, `/creating-tasks`, `/dispatching-agents`, `/landing-the-plane`, `/writing-work-logs`
+
+### Planning Workflow
+
+CT uses `/planning-work` skill for multi-task features:
+
+```
+Mark: "Let's build X"
+  → CT creates epic (container)
+  → Research tasks + researcher agents (parallelized)
+  → EnterPlanMode → write plan document
+  → ExitPlanMode (approval)
+  → plan-to-beads agent → epic + tasks
+  → Execution from bd ready
+```
+
+**Reference:** [`/planning-work`](.claude/skills/planning-work/SKILL.md)
 
 ## Quick Reference
 
@@ -237,11 +257,13 @@ git branch -d task/<id>              # Deletes branch
 │   ├── rust-implementer.md   # Rust-specific implementation
 │   ├── task-reviewer.md      # First-gate review
 │   ├── researcher.md         # Read-only investigation
-│   └── quality-gate.md       # Landing verification
+│   ├── quality-gate.md       # Landing verification
+│   └── plan-to-beads.md      # Plan → epic + tasks
 ├── skills/
 │   ├── agent-working/        # Implementation workflow
 │   ├── agent-reviewing/      # Review workflow
 │   ├── agent-researching/    # Research workflow
+│   ├── planning-work/        # CT planning workflow
 │   ├── creating-tasks/       # Task creation guidance
 │   ├── discovering-issues/   # Side quest capture
 │   ├── dispatching-agents/   # Agent dispatch logic (CT)

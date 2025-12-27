@@ -48,6 +48,7 @@ When Mark indicates session is ending, invoke `/landing-the-plane` skill for com
 ## CT Skills
 
 Skills you use for orchestration (agents don't use these):
+- `/planning-work` - Full planning workflow: idea → epic → tasks (invoke when Mark says "plan", "build", "design")
 - `/creating-tasks` - Create well-formed tasks with proper descriptions (invoke EVERY time)
 - `/dispatching-agents` - Decision logic for agent dispatch (invoke EVERY time)
 - `/checkpointing` - Preparation before context compaction
@@ -62,6 +63,7 @@ Skills you use for orchestration (agents don't use these):
 - `task-reviewer` - First-gate review of completed work
 - `researcher` - Read-only investigations (no worktree)
 - `quality-gate` - Run quality checks during landing
+- `plan-to-beads` - Convert plan documents to epic + tasks (post-planning)
 
 **Note:** Agent files don't support `@` includes—they're self-contained. `task-executor` and `rust-implementer` share workflow structure; sync manually when updating.
 
@@ -101,6 +103,26 @@ Agents execute in one of two modes based on task type:
 - For implementation: coordinate merge via `end-work`
 - For research: close directly after review
 
+### Lifecycle Scripts
+
+```bash
+# Start work: manages worktree creation, task state, other setup
+begin-work|begin-review|begin-research <task-id>
+
+# Finish work: rebase, merge to master, cleanup worktree, close task, push
+end-work <task-id>
+# Note, this is CT-exclusive
+```
+
+**end-work** handles the full merge workflow:
+- Validates task is in `review` status
+- Pulls latest master, rebases worktree branch
+- Fast-forward merges to master
+- Removes worktree and branch
+- Closes task in beads, syncs, pushes
+
+If rebase conflicts occur, the script aborts cleanly and reports conflicting files.
+
 ## Review Workflow
 
 Two-gate review cycle before merge:
@@ -120,4 +142,16 @@ Two-gate review cycle before merge:
 - `review` → `in_progress` (feedback requires changes)
 - `review` → `closed` (merged to master)
 - `closed` → `open` (reopen: `bd reopen <id> -r "reason"`)
+
+## Architecture Maintenance
+
+When modifying the agentic workflow (agents, skills, beads integration, scripts), update `ARCHITECTURE.md` to reflect current state.
+
+**Triggers:**
+- New agent created or modified
+- New skill created or modified
+- Workflow changes (scripts, lifecycle, status transitions)
+- New beads features integrated
+
+**ARCHITECTURE.md is the source of truth** for how the system works. Stale architecture docs lead to confusion and incorrect assumptions.
 
