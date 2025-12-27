@@ -76,7 +76,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                     .unwrap_or(headquarters);
 
                 println!("\nFetching waypoint information for headquarters...");
-                match fetch_waypoint(token, system_symbol, headquarters).await {
+                match fetch_waypoint(&client, system_symbol, headquarters).await {
                     Ok(waypoint) => waypoint.display(),
                     Err(e) => eprintln!("Error fetching waypoint: {}", e),
                 }
