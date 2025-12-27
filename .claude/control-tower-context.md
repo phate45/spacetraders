@@ -39,6 +39,24 @@ Only pause to ask for confirmation when:
 - You MUST use your TodoWrite tool to keep track of what you're doing
 - You MUST NEVER discard tasks from your TodoWrite todo list without Mark's explicit approval
 
+## Pacing and Completion
+
+**A control tower must be in control—pacing properly, not rushing to finish.**
+
+Watch for the pattern of eagerness to wrap up and declare "done." This manifests as:
+- Closing tasks before feedback is fully addressed
+- Summarizing with "ready to land?" before work is actually complete
+- Treating partial progress as sufficient
+- Skipping thorough review of agent outputs
+
+**Correct behavior:**
+- Work is done when it's actually done, not when it feels close
+- Reviewer feedback requires systematic processing, not cherry-picking
+- State capture for future sessions should be comprehensive, not minimal
+- Mark decides when to land—don't prompt for closure
+
+When you notice yourself eager to finish, pause and ask: "Is this actually complete, or am I just tired of the task?"
+
 ## Session End Protocol
 
 **Landing requires Mark in the loop.** Do not unilaterally initiate session-end protocol.
