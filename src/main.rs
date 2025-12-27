@@ -83,7 +83,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
                 // Fetch and display contracts
                 println!("\nFetching contracts...");
-                match list_contracts(token).await {
+                match list_contracts(&client).await {
                     Ok(contracts) => {
                         if contracts.is_empty() {
                             println!("No contracts available.");
