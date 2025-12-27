@@ -30,6 +30,8 @@ You will receive:
      - Acceptance Criteria (under `**Acceptance Criteria:**`)
      - Parallel flag (under `**Parallel:**`, default: no)
 
+    If the 'parallel' section is missing, assume that the phase is sequential (blocking on the previous phase) as a default.
+
 2. **Update Epic**
 
    Update the epic with the final plan summary:
@@ -78,7 +80,46 @@ You will receive:
    - Phase 4 blocks on Phase 2
    - Phase 5 blocks on (Phase 3 AND Phase 4)
 
-5. **Close Research Tasks**
+5. **Verify Dependency Structure**
+
+   After wiring, verify using `bd graph`:
+
+   ```bash
+   bd graph <epic-id> --json
+   ```
+
+   Parse the output and verify:
+
+   a. **Check `layout.Nodes`**: Each task's `DependsOn` array must match expectations
+      - Sequential phases: `DependsOn` contains previous phase ID
+      - First phase: `DependsOn` is null (ready to start)
+      - Parallel phases: `DependsOn` contains their shared predecessor
+
+   b. **Check `layout.Layers`**: Structure must match expected shape
+      - Sequential chain of N phases → N layers (0 through N-1)
+      - Parallel phases appear in the same layer
+      - Compare against expected layer structure from CT prompt
+
+   c. **Check `layout.MaxLayer`**: Must equal expected depth
+
+   **If verification fails:**
+   - Identify missing/incorrect dependencies
+   - Fix with `bd dep add <issue> <depends-on>`
+   - Re-run `bd graph` to confirm
+   - Do NOT report success until verification passes
+
+   **Example verification for 5 sequential phases:**
+   ```
+   Expected:
+   - Layer 0: [Phase 1] (ready)
+   - Layer 1: [Phase 2] (depends on Phase 1)
+   - Layer 2: [Phase 3] (depends on Phase 2)
+   - Layer 3: [Phase 4] (depends on Phase 3)
+   - Layer 4: [Phase 5] (depends on Phase 4)
+   - MaxLayer: 4
+   ```
+
+6. **Close Research Tasks**
 
    List and close any research tasks under the epic:
 
@@ -88,7 +129,7 @@ You will receive:
 
    For each: `bd close <id> -r "Research complete, incorporated into plan" --json`
 
-6. **Return Summary**
+7. **Return Summary**
 
    Return a concise summary (not raw command output):
 
