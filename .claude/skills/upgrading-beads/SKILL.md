@@ -104,6 +104,70 @@ Provide synthesis of:
 - When hooks seem to not fire
 - After manual beads binary update
 
+## Troubleshooting
+
+### DB-JSONL Count Mismatch
+
+`bd doctor` reports database and JSONL have different issue counts.
+
+**Diagnose:** Identify specific missing entries:
+```bash
+diff <(bd export | jq -r '.id' | sort) <(cat .beads/issues.jsonl | jq -r '.id' | sort)
+```
+
+**Common causes:**
+1. **Missing issue in JSONL:** Append from export, commit before `bd sync` can overwrite
+2. **Tombstones:** Use `bd compact --prune` to remove soft-deleted entries
+3. **Sync branch divergence:** See "Sync Branch Circular Conflict" below
+
+### Custom Status Validation Failure
+
+Fresh DB import fails with `invalid status: draft` (or other custom status).
+
+**Cause:** Custom statuses stored in DB config, not `config.yaml`. Fresh DB lacks setting.
+
+**Fix:**
+```bash
+bd config set status.custom "draft,review"
+bd import -i .beads/issues.jsonl
+```
+
+**Finding custom statuses from old DB:**
+```bash
+bd --db /tmp/old-beads.db config list --json | jq 'to_entries[] | select(.key | contains("status"))'
+```
+
+### Sync Branch Circular Conflict
+
+`bd sync` keeps pulling stale data from beads-sync branch, reintroducing mismatches after every fix attempt.
+
+**Cause:** beads-sync branch diverged from master. Content-level merge produces inconsistent results.
+
+**Nuclear fix:** Directly update the sync worktree, bypassing merge:
+```bash
+# Export clean state
+bd export > .beads/issues.jsonl
+
+# Copy to sync worktree (location: .git/beads-worktrees/beads-sync/.beads/)
+cp .beads/issues.jsonl .git/beads-worktrees/beads-sync/.beads/issues.jsonl
+
+# Commit and push from worktree
+cd .git/beads-worktrees/beads-sync
+git add .beads/issues.jsonl && git commit -m "fix: sync JSONL with master" && git push
+
+# Return to main project
+cd /home/phate/BigProjects/spacetraders
+bd sync
+```
+
+**Warning:** After `cd` into worktree, beads commands operate on wrong project. Always run `pwd` before beads commands.
+
+### Full Troubleshooting Reference
+
+For detailed walkthrough with context, see vault work log:
+`/home/phate/Documents/second-brain/01_Projects/spacetraders/logs/2025-12-27.md`
+Section: "Beads Upgrade and DB-JSONL Sync Troubleshooting"
+
 ## Quick Reference
 
 ```bash
