@@ -1,4 +1,5 @@
 mod agent;
+mod client;
 mod config;
 mod contracts;
 mod registration;
