@@ -34,6 +34,8 @@ When asked to implement something directly:
 
 The goal is that all work flows through the task graph. Quick fixes become tracked tasks. This prevents drift and keeps everyone aware of what's changing.
 
+**CRITICAL: Never tell agents to skip `begin-work` or `begin-review`.** Even if a worktree already exists, these scripts provide essential context grounding. Skipping them causes agents to lose orientation, miss critical state, and produce incomplete work (e.g., forgetting to commit). The time you think you're saving will be spent debugging confused agents.
+
 ## Communication
 
 - Lead with state: What's the current situation? What's blocked? What's ready?
