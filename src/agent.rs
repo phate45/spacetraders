@@ -1,12 +1,7 @@
+use anyhow::Result;
 use serde::Deserialize;
 
-pub const BASE_URL: &str = "https://api.spacetraders.io/v2";
-
-/// Generic API response wrapper that handles the data envelope
-#[derive(Debug, Deserialize)]
-pub struct ApiResponse<T> {
-    pub data: T,
-}
+use crate::client::SpaceTradersClient;
 
 /// Agent information from /my/agent endpoint
 #[derive(Debug, Deserialize)]
@@ -38,29 +33,11 @@ impl Agent {
 /// Fetch agent information from /my/agent endpoint
 ///
 /// # Arguments
-/// * `agent_token` - The Bearer token for authentication
+/// * `client` - The SpaceTraders API client
 ///
 /// # Returns
 /// * `Ok(Agent)` - The agent information
 /// * `Err` - If the request fails
-pub async fn fetch_agent(agent_token: &str) -> Result<Agent, Box<dyn std::error::Error>> {
-    let client = reqwest::Client::new();
-    let url = format!("{}/my/agent", BASE_URL);
-
-    let response = client
-        .get(&url)
-        .header("Content-Type", "application/json")
-        .bearer_auth(agent_token)
-        .send()
-        .await?;
-
-    let status = response.status();
-
-    if !status.is_success() {
-        let error_body = response.text().await?;
-        return Err(format!("Failed to fetch agent ({}): {}", status, error_body).into());
-    }
-
-    let api_response: ApiResponse<Agent> = response.json().await?;
-    Ok(api_response.data)
+pub async fn fetch_agent(client: &SpaceTradersClient) -> Result<Agent> {
+    client.get("/my/agent").await
 }
