@@ -1,3 +1,4 @@
+use anyhow::{Context, Result};
 use serde::{Deserialize, Serialize};
 use std::fs;
 use std::path::Path;
@@ -12,12 +13,14 @@ pub struct Config {
 
 impl Config {
     /// Load config from .spacetraders.toml, creating default if missing
-    pub fn load() -> Result<Self, Box<dyn std::error::Error>> {
+    pub fn load() -> Result<Self> {
         let path = Path::new(CONFIG_FILE);
 
         if path.exists() {
-            let contents = fs::read_to_string(path)?;
-            let config: Config = toml::from_str(&contents)?;
+            let contents = fs::read_to_string(path)
+                .context("Failed to read config file")?;
+            let config: Config = toml::from_str(&contents)
+                .context("Failed to parse config file")?;
             Ok(config)
         } else {
             // Create default config with no token
@@ -31,9 +34,11 @@ impl Config {
     }
 
     /// Save config to .spacetraders.toml
-    pub fn save(&self) -> Result<(), Box<dyn std::error::Error>> {
-        let toml_string = toml::to_string_pretty(self)?;
-        fs::write(CONFIG_FILE, toml_string)?;
+    pub fn save(&self) -> Result<()> {
+        let toml_string = toml::to_string_pretty(self)
+            .context("Failed to serialize config")?;
+        fs::write(CONFIG_FILE, toml_string)
+            .context("Failed to write config file")?;
         Ok(())
     }
 

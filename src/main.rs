@@ -2,18 +2,17 @@ mod agent;
 mod client;
 mod config;
 mod contracts;
-mod registration;
 mod waypoint;
 
 use agent::fetch_agent;
+use anyhow::{Context, Result};
 use client::SpaceTradersClient;
 use config::Config;
 use contracts::list_contracts;
-use registration::register_agent;
 use waypoint::fetch_waypoint;
 
 #[tokio::main]
-async fn main() -> Result<(), Box<dyn std::error::Error>> {
+async fn main() -> Result<()> {
     println!("=== SpaceTraders Client ===\n");
 
     // Load or create config
@@ -26,11 +25,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
         // Read ACCOUNT_TOKEN from environment
         let account_token = std::env::var("ACCOUNT_TOKEN")
-            .map_err(|_| "ACCOUNT_TOKEN environment variable not set")?;
+            .context("ACCOUNT_TOKEN environment variable not set")?;
 
         // Register with TANDEM_PILOT symbol
         let agent_symbol = "TANDEM_PILOT";
-        let (token, confirmed_symbol) = register_agent(&account_token, agent_symbol).await?;
+        let (token, confirmed_symbol) = SpaceTradersClient::register(&account_token, agent_symbol).await?;
 
         // Store token and symbol in config
         config.agent_token = Some(token);
