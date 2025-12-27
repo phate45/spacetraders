@@ -6,6 +6,7 @@ mod registration;
 mod waypoint;
 
 use agent::fetch_agent;
+use client::SpaceTradersClient;
 use config::Config;
 use contracts::list_contracts;
 use registration::register_agent;
@@ -57,8 +58,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Fetch and display agent information
     if let Some(token) = &config.agent_token {
+        // Create API client
+        let client = SpaceTradersClient::new(token.clone());
+
         println!("\nFetching agent information...");
-        match fetch_agent(token).await {
+        match fetch_agent(&client).await {
             Ok(agent) => {
                 agent.display();
 

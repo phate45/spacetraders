@@ -1,6 +1,6 @@
 use serde::Deserialize;
 
-use crate::agent::{ApiResponse, BASE_URL};
+use crate::client::{ApiResponse, BASE_URL};
 
 /// Waypoint information from /systems/:systemSymbol/waypoints/:waypointSymbol endpoint
 #[derive(Debug, Deserialize)]
