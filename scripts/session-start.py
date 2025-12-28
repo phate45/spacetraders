@@ -61,6 +61,36 @@ def run_bd(args: list[str]) -> list[dict[str, Any]]:
     return json.loads(output)
 
 
+def get_meta_task_ids() -> set[str]:
+    """
+    Get IDs of all tasks under the meta-work epic (spacetraders-m7y).
+
+    Uses single `bd list --parent` call instead of per-task lookups.
+    """
+    meta_tasks = run_bd(["list", "--parent", "spacetraders-m7y"])
+    return {task["id"] for task in meta_tasks}
+
+
+TASK_DISPLAY_FIELDS = {"id", "title", "status", "priority", "issue_type"}
+
+
+def slim_tasks(tasks: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Filter tasks to display fields only."""
+    return [{k: v for k, v in t.items() if k in TASK_DISPLAY_FIELDS} for t in tasks]
+
+
+def categorize_tasks(
+    tasks: list[dict[str, Any]], meta_ids: set[str]
+) -> list[dict[str, Any]]:
+    """Add 'category' field and filter to display fields only."""
+    categorized = []
+    for task in tasks:
+        slim_task = {k: v for k, v in task.items() if k in TASK_DISPLAY_FIELDS}
+        slim_task["category"] = "meta" if task["id"] in meta_ids else "game"
+        categorized.append(slim_task)
+    return categorized
+
+
 def evaluate_gates() -> dict[str, Any]:
     """
     Evaluate timer gates and return results.
@@ -149,24 +179,50 @@ def main() -> None:
     # Check for orphaned issues
     orphans_result = check_orphans()
 
+    # Get meta-work task IDs (single bd call)
+    meta_ids = get_meta_task_ids()
+
+    # Fetch task lists
+    ready_tasks = run_bd(["ready"])
+    in_progress_tasks = run_bd(["list", "--status", "in_progress"])
+    review_tasks = run_bd(["list", "--status", "review"])
+    drafts_tasks = run_bd(["list", "--status", "draft"])
+
+    # Categorize tasks as meta or game work
+    categorized_ready = categorize_tasks(ready_tasks, meta_ids)
+    categorized_in_progress = categorize_tasks(in_progress_tasks, meta_ids)
+    categorized_review = categorize_tasks(review_tasks, meta_ids)
+
     session_state = {
         "gates": gates_result,
         "orphans": orphans_result,
-        "ready": run_bd(["ready"]),
-        "in_progress": run_bd(["list", "--status", "in_progress"]),
-        "review": run_bd(["list", "--status", "review"]),
-        "drafts": run_bd(["list", "--status", "draft"]),
+        "ready": categorized_ready,
+        "in_progress": categorized_in_progress,
+        "review": categorized_review,
+        "drafts": slim_tasks(drafts_tasks),
     }
 
     # Check for beads updates
     beads_update = check_beads_update()
 
-    # Add summary counts
+    # Calculate meta/game breakdown
+    meta_ready = sum(1 for t in categorized_ready if t["category"] == "meta")
+    game_ready = sum(1 for t in categorized_ready if t["category"] == "game")
+    meta_in_progress = sum(
+        1 for t in categorized_in_progress if t["category"] == "meta"
+    )
+    game_in_progress = sum(
+        1 for t in categorized_in_progress if t["category"] == "game"
+    )
+    meta_review = sum(1 for t in categorized_review if t["category"] == "meta")
+    game_review = sum(1 for t in categorized_review if t["category"] == "game")
+
+    # Add summary counts (compact one-liner format for meta/game/total)
     session_state["summary"] = {
-        "ready_count": len(session_state["ready"]),
-        "in_progress_count": len(session_state["in_progress"]),
-        "review_count": len(session_state["review"]),
-        "draft_count": len(session_state["drafts"]),
+        "meta": f"RDY: {meta_ready}, PG: {meta_in_progress}, RW: {meta_review}",
+        "game": f"RDY: {game_ready}, PG: {game_in_progress}, RW: {game_review}",
+        "total": f"RDY: {len(categorized_ready)}, PG: {len(categorized_in_progress)}, RW: {len(categorized_review)}",
+        "draft_count": len(drafts_tasks),
         "beads_update_available": beads_update,
         "gates_closed": len(gates_result.get("closed", [])),
         "orphans_found": orphans_result.get("found", False),
