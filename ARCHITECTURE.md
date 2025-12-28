@@ -187,6 +187,26 @@ REPLACES content      APPENDS to list
 
 **Reference:** [`shared/notes-format.md`](.claude/skills/shared/notes-format.md)
 
+### Labels
+
+Labels are free-form strings for categorization and filtering.
+
+```bash
+bd label add <id> <label>       # Add label to issue
+bd label remove <id> <label>    # Remove label
+bd label list <id>              # List labels on issue
+bd list --label <name>          # Filter by label (AND logic)
+bd list --label-any "a,b"       # Filter by label (OR logic)
+```
+
+**Special labels:**
+
+| Label | Purpose |
+|-------|---------|
+| `container` | Organizational epics (not directly actionable). Filtered from `session-start.py` ready list. |
+
+**When to use `container`:** Apply to epics that group related work but aren't themselves work items. Children tasks appear in ready queue; the container does not.
+
 ## Shared References
 
 Skills declare dependencies via `<mandatory_reading>` sections:
