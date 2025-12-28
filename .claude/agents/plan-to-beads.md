@@ -51,13 +51,11 @@ You will receive:
      --parent <epic-id> \
      --description "[Description content]" \
      --design "[Design content]" \
-     --acceptance "[Acceptance criteria as text]" \
+     --acceptance "[Acceptance criteria as plain list (no checkboxes)]" \
      --json
    ```
 
    Record each task ID for dependency wiring.
-
-   **Note:** To reparent an existing task later: `bd update <id> --parent <epic-id>`
 
 4. **Wire Dependencies**
 
