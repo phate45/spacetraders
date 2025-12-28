@@ -80,6 +80,9 @@ bd create "Found bug" -t bug -p 1 --deps discovered-from:<parent-id> --json
 bd update <id> [<id>...] --status in_progress --json
 bd update <id> [<id>...] --priority 1 --json
 
+# Reparent issue to different epic
+bd update <id> --parent <epic-id> --json
+
 # Edit issue fields in $EDITOR (HUMANS ONLY - not for agents)
 # NOTE: This command is intentionally NOT exposed via the MCP server
 # Agents should use 'bd update' with field-specific parameters instead

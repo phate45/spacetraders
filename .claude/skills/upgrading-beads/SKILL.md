@@ -82,12 +82,20 @@ bd doctor
 
 Checks for common issues (sync problems, missing hooks).
 
+**For JSON output**, filter to show only non-ok checks (preserves top-level fields):
+```bash
+bd doctor --json 2>/dev/null | jq '.checks = [.checks[] | select(.status != "ok")]'
+```
+
 **Ignore these warnings** (local divergence from author's expectations):
 - `Sync Branch Config: sync-branch not configured`
 - `Claude Plugin: beads plugin not installed`
 - `Claude Integration: Not configured`
+- `DB-JSONL Sync: Count mismatch` — transient; resolves after `bd sync`
 
 **Surface to Mark** any other warnings or failures. If the changelog review (step 2 or 4) has relevant context for the issue, include it.
+
+**Do NOT run `bd doctor --fix`** — it's interactive and requires Mark's input.
 
 ### 7. Conclude
 
@@ -106,6 +114,8 @@ Provide synthesis of:
 
 ## Troubleshooting
 
+> **Note:** Troubleshooting steps that modify `issues.jsonl` require Mark's approval. Surface the diagnosis to Mark and let him execute the fix.
+
 ### DB-JSONL Count Mismatch
 
 `bd doctor` reports database and JSONL have different issue counts.
@@ -119,6 +129,8 @@ diff <(bd export | jq -r '.id' | sort) <(cat .beads/issues.jsonl | jq -r '.id' |
 1. **Missing issue in JSONL:** Append from export, commit before `bd sync` can overwrite
 2. **Tombstones:** Use `bd compact --prune` to remove soft-deleted entries
 3. **Sync branch divergence:** See "Sync Branch Circular Conflict" below
+
+**Escalate to Mark** with the diff output and let him decide the resolution.
 
 ### Custom Status Validation Failure
 
@@ -143,7 +155,7 @@ bd --db /tmp/old-beads.db config list --json | jq 'to_entries[] | select(.key | 
 
 **Cause:** beads-sync branch diverged from master. Content-level merge produces inconsistent results.
 
-**Nuclear fix:** Directly update the sync worktree, bypassing merge:
+**Nuclear fix (Mark only):** Directly update the sync worktree, bypassing merge:
 ```bash
 # Export clean state
 bd export > .beads/issues.jsonl
@@ -162,11 +174,30 @@ bd sync
 
 **Warning:** After `cd` into worktree, beads commands operate on wrong project. Always run `pwd` before beads commands.
 
+**Escalate to Mark** if you detect this pattern — do not attempt the nuclear fix autonomously.
+
 ### Full Troubleshooting Reference
 
 For detailed walkthrough with context, see vault work log:
 `/home/phate/Documents/second-brain/01_Projects/spacetraders/logs/2025-12-27.md`
 Section: "Beads Upgrade and DB-JSONL Sync Troubleshooting"
+
+## CLI Notes
+
+- `bd sync` does **not** have `--json` output
+- `bd doctor --fix` is interactive — do not run without Mark
+
+## Hands-Off Rules
+
+**Do NOT proactively run commands that overwrite `issues.jsonl`:**
+- `bd export > .beads/issues.jsonl` — potentially destructive
+- Direct file manipulation of `.beads/issues.jsonl`
+
+These commands can cause data loss if the DB and JSONL have diverged. Surface the issue to Mark and let him decide how to resolve.
+
+**Safe commands:**
+- `bd sync` — handles export/import with conflict detection
+- `bd doctor` (without `--fix`) — read-only diagnostics
 
 ## Quick Reference
 

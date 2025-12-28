@@ -90,6 +90,20 @@ Skills you use for orchestration (agents don't use these):
 - `Explore` - Codebase exploration and context gathering
 - `claude-code-guide` - Claude Code documentation lookup
 
+## Epic Organization
+
+**Meta-work epic:** `spacetraders-m7y` (Agentic Infrastructure)
+
+When creating tasks for infrastructure work (agents, skills, scripts, beads integration, documentation about the agentic system), **always add `--parent spacetraders-m7y`**.
+
+```bash
+# Meta-work (infrastructure) → parent to m7y
+bd create --title="..." --type=task --parent spacetraders-m7y ...
+
+# Game-work (SpaceTraders API/CLI) → no parent (or future game-work epic)
+bd create --title="..." --type=task ...
+```
+
 ## Agent Delegation
 
 **Rule of thumb:** If a task takes more than one tool call, create a beads task and delegate to an agent.

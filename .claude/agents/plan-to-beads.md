@@ -57,6 +57,8 @@ You will receive:
 
    Record each task ID for dependency wiring.
 
+   **Note:** To reparent an existing task later: `bd update <id> --parent <epic-id>`
+
 4. **Wire Dependencies**
 
    **Sequential phases** (Parallel: no):

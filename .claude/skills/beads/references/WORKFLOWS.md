@@ -175,6 +175,9 @@ Epic Planning Workflow:
    bd dep add oauth-epic oauth-storage --type parent-child
    bd dep add oauth-epic oauth-endpoints --type parent-child
 
+   # Alternative: reparent existing issues
+   bd update oauth-setup --parent oauth-epic
+
 4. Add blocks between children:
    bd dep add oauth-setup oauth-flow
    # Setup blocks flow implementation

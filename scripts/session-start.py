@@ -7,6 +7,7 @@ Gathers session state in a single invocation:
 - In-progress work (currently claimed)
 - Review work (awaiting review)
 - Draft issues (need refinement)
+- Orphaned issues (mentioned in commits but never closed)
 - Beads update availability
 
 Usage:
@@ -104,14 +105,53 @@ def evaluate_gates() -> dict[str, Any]:
     return {"evaluated": 0, "closed": [], "message": output or "Unknown"}
 
 
+def check_orphans() -> dict[str, Any]:
+    """
+    Check for orphaned issues (mentioned in commits but never closed).
+
+    Note: `bd orphans --json` currently returns null (bug), so we parse human output.
+    Baseline: "✓ No orphaned issues found"
+
+    Returns dict with:
+        - found: bool indicating if orphans were detected
+        - count: number of orphans (0 if none)
+        - message: human-readable output
+        - raw_output: original output for debugging when format changes
+    """
+    result = subprocess.run(
+        ["bd", "orphans"],
+        capture_output=True,
+        text=True,
+    )
+
+    output = result.stdout.strip()
+
+    # Known baseline: no orphans
+    if "No orphaned issues found" in output:
+        return {"found": False, "count": 0, "message": "No orphaned issues"}
+
+    # If output differs from baseline, orphans likely exist
+    # Flag for CT to surface to Mark for implementation
+    return {
+        "found": True,
+        "count": -1,  # Unknown count, needs parsing implementation
+        "message": "Orphaned issues detected - output format needs implementation",
+        "raw_output": output,
+    }
+
+
 def main() -> None:
     pretty = "--pretty" in sys.argv
 
     # Evaluate gates first (may unblock work)
     gates_result = evaluate_gates()
 
+    # Check for orphaned issues
+    orphans_result = check_orphans()
+
     session_state = {
         "gates": gates_result,
+        "orphans": orphans_result,
         "ready": run_bd(["ready"]),
         "in_progress": run_bd(["list", "--status", "in_progress"]),
         "review": run_bd(["list", "--status", "review"]),
@@ -129,6 +169,7 @@ def main() -> None:
         "draft_count": len(session_state["drafts"]),
         "beads_update_available": beads_update,
         "gates_closed": len(gates_result.get("closed", [])),
+        "orphans_found": orphans_result.get("found", False),
     }
 
     if pretty:

@@ -67,6 +67,8 @@ This epic will contain:
 
 Record the epic ID—all subsequent tasks use `--parent <epic-id>`.
 
+**Note:** To reparent an existing task: `bd update <id> --parent <epic-id>`
+
 ### Phase 2: Scope Establishment (Conversational)
 
 **BEFORE deep research**, establish the broad goal and scope with Mark through natural conversation. Research without scope alignment = wasted context. Every time.
