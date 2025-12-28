@@ -87,6 +87,11 @@ Checks for common issues (sync problems, missing hooks).
 bd doctor --json 2>/dev/null | jq '.checks = [.checks[] | select(.status != "ok")]'
 ```
 
+**Fallback:** If the `!=` operator causes escaping issues in certain execution contexts, use positive matching instead:
+```bash
+bd doctor --json 2>/dev/null | jq '.checks | map(select(.status == "warning" or .status == "error" or .status == "fail"))'
+```
+
 **Ignore these warnings** (local divergence from author's expectations):
 - `Sync Branch Config: sync-branch not configured`
 - `Claude Plugin: beads plugin not installed`

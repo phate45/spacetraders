@@ -217,3 +217,35 @@ When modifying the agentic workflow (agents, skills, beads integration, scripts)
 
 **ARCHITECTURE.md is the source of truth** for how the system works. Stale architecture docs lead to confusion and incorrect assumptions.
 
+## CLI Quirks and Gotchas
+
+Learned behaviors from actual usage—document failures to prevent repeating them.
+
+### Beads CLI (`bd`)
+
+**`bd create` description handling:**
+- Heredoc via stdin does NOT work: `bd create --title="..." << 'EOF'` ignores the heredoc
+- Use `--description="inline text"` for short descriptions
+- Use `--body-file /path/to/file` for long descriptions (NOT `-f -` for stdin)
+- Workaround: create issue first, then `bd comment <id> -f /path/to/file`
+
+**`bd create` has no `--status` flag:**
+- Issues are created as `open` by default
+- To create as draft: `bd create ...` then `bd update <id> --status=draft`
+
+**`bd comment` stdin handling:**
+- `-f -` does NOT work for stdin (tries to open file literally named "-")
+- Must write to temp file first, then `bd comment <id> -f /tmp/file.md`
+
+### jq in Claude Code's Bash Tool
+
+**The `!=` operator can be escaped incorrectly:**
+- Query: `jq 'select(.status != "ok")'`
+- Sometimes becomes: `jq 'select(.status \!= "ok")'` → syntax error
+- **Workaround:** Use positive matching instead:
+  ```bash
+  jq 'select(.status == "warning" or .status == "error")'
+  ```
+- This is intermittent—works sometimes, fails other times
+- Root cause unclear (possibly shell history expansion or tool-specific escaping)
+
