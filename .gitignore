@@ -12,8 +12,8 @@ CLAUDE.local.md
 api-docs/
 
 # env
-
 .envrc
+CONTEXT.md
 
 # spacetraders config (contains API tokens)
 .spacetraders.toml
