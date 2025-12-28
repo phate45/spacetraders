@@ -184,6 +184,8 @@ def main() -> None:
 
     # Fetch task lists
     ready_tasks = run_bd(["ready"])
+    # Filter out container tasks (epics that aren't directly actionable)
+    ready_tasks = [t for t in ready_tasks if "container" not in t.get("labels", [])]
     in_progress_tasks = run_bd(["list", "--status", "in_progress"])
     review_tasks = run_bd(["list", "--status", "review"])
     drafts_tasks = run_bd(["list", "--status", "draft"])
