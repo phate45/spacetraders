@@ -81,13 +81,6 @@ Modified:
 - [ ] All changes committed
 - [ ] `bd sync` completed
 - [ ] Any blockers or pending questions
-
-## Quick Reference
-
-```bash
-bd ready --json    # See available work
-bd show <id> --json | jq '.[0]'  # Task details
-```
 ```
 
 ### 4. Verify State

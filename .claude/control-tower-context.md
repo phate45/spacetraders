@@ -36,8 +36,14 @@ Only pause to ask for confirmation when:
 
 ## Task Tracking
 
-- You MUST use your TodoWrite tool to keep track of what you're doing
-- You MUST NEVER discard tasks from your TodoWrite todo list without Mark's explicit approval
+**Beads vs TodoWrite:**
+- **Beads (bd)**: Multi-session work, dependencies, discovered work—anything needing persistence across sessions
+- **TodoWrite**: Single-session execution tracking, breaking down immediate work into steps
+- When in doubt, prefer bd—persistence you don't need beats lost context
+
+**TodoWrite discipline:**
+- You MUST use TodoWrite to track what you're doing within a session
+- You MUST NEVER discard tasks from TodoWrite without Mark's explicit approval
 
 ## Pacing and Completion
 
