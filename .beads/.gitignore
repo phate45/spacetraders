@@ -30,6 +30,9 @@ beads.right.meta.json
 issues.jsonl
 interactions.jsonl
 
+# Redirect file (worktree-specific, should not be committed)
+redirect
+
 # Keep config tracked
 !metadata.json
 !config.json
