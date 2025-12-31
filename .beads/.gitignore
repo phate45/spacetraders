@@ -27,11 +27,15 @@ beads.right.jsonl
 beads.right.meta.json
 
 # Beads sync-branch workflow: issues live on beads-sync, not master
+# See worklog from 2025-12-30
 issues.jsonl
 interactions.jsonl
 
 # Redirect file (worktree-specific, should not be committed)
 redirect
+
+# last-touched - reference to last updated issue
+last-touched
 
 # Keep config tracked
 !metadata.json
