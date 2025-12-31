@@ -8,7 +8,6 @@ CLAUDE.local.md
 .claude/vault-integration.md
 
 # spacetraders docs
-
 api-docs/
 
 # env
@@ -26,3 +25,4 @@ __pycache__/
 
 # Added by cargo
 /target
+
