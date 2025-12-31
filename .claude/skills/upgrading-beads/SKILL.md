@@ -93,16 +93,51 @@ bd doctor --json 2>/dev/null | jq '.checks | map(select(.status == "warning" or 
 ```
 
 **Ignore these warnings** (local divergence from author's expectations):
-- `Sync Branch Config: sync-branch not configured`
 - `Claude Plugin: beads plugin not installed`
 - `Claude Integration: Not configured`
+- `Issues Tracking: issues.jsonl is ignored by git` — expected with sync-branch workflow
 - `DB-JSONL Sync: Count mismatch` — transient; resolves after `bd sync`
 
 **Surface to Mark** any other warnings or failures. If the changelog review (step 2 or 4) has relevant context for the issue, include it.
 
 **Do NOT run `bd doctor --fix`** — it's interactive and requires Mark's input.
 
-### 7. Conclude
+### 7. Apply Config Updates
+
+New beads versions may require updates to `.beads/.gitignore` or `.beads/config.yaml`.
+
+**Check for missing gitignore patterns:**
+```bash
+# Doctor will report "Outdated .beads/.gitignore" if patterns are missing
+# Common additions: redirect (v0.42.0+)
+```
+
+**Verify sync-branch config:**
+```bash
+bd config get sync-branch --json
+# Should return: "value": "beads-sync"
+```
+
+If config changes are needed, apply them and **commit before running `bd sync`**:
+
+```bash
+# Example: add redirect pattern
+echo "redirect" >> .beads/.gitignore
+
+# Example: set sync-branch (use hyphen, not dot)
+bd config set sync.branch beads-sync
+
+# CRITICAL: Commit before sync
+git add .beads/.gitignore .beads/config.yaml
+git commit -m "chore(beads): post-upgrade config updates"
+
+# Now safe to sync
+bd sync
+```
+
+> **⚠️ Warning:** Local changes to `.beads/` files get overwritten by `bd sync` if not committed first. The sync-branch workflow pulls from beads-sync, which can clobber uncommitted local changes.
+
+### 8. Conclude
 
 Provide synthesis of:
 1. Version jump (from → to)
