@@ -10,6 +10,7 @@ Usage:
     python install_beads.py --check         # Check if update available
     python install_beads.py --check --quiet # Output JSON snippet for scripting
     python install_beads.py --force         # Force reinstall even if up to date
+    python install_beads.py --doctor        # Run bd doctor with filtered output
 """
 
 import argparse
@@ -28,6 +29,17 @@ from pathlib import Path
 GITHUB_API_URL = "https://api.github.com/repos/steveyegge/beads/releases/latest"
 INSTALL_DIR = Path.home() / ".local" / "bin"
 BINARY_NAME = "bd"
+BEADS_REPO_PATH = Path("/tmp/beads")
+
+# Doctor check statuses that indicate issues (filter out "ok")
+DOCTOR_ISSUE_STATUSES = {"warning", "error", "fail"}
+
+# Doctor warnings we ignore (local divergence from upstream expectations)
+IGNORED_DOCTOR_WARNINGS = {
+    "Claude Plugin",
+    "Claude Integration",
+    "Issues Tracking",  # Expected with sync-branch workflow
+}
 
 
 def get_platform() -> str:
@@ -190,12 +202,80 @@ def check_path() -> None:
         print()
 
 
+def check_beads_repo() -> dict:
+    """Check if /tmp/beads repo exists and return status info."""
+    exists = BEADS_REPO_PATH.exists() and (BEADS_REPO_PATH / ".git").exists()
+    return {
+        "exists": exists,
+        "path": str(BEADS_REPO_PATH),
+        "message": "Ready for changelog review" if exists else "Clone repo to review changelog",
+    }
+
+
+def run_doctor() -> int:
+    """Run bd doctor with filtered output for our local setup.
+
+    Filters to show only warning/error/fail statuses, excluding known
+    ignorable warnings specific to our sync-branch workflow.
+    """
+    bd_path = INSTALL_DIR / BINARY_NAME
+    if not bd_path.exists():
+        print("ERROR: bd not installed")
+        return 1
+
+    try:
+        result = subprocess.run(
+            [str(bd_path), "doctor", "--json"],
+            capture_output=True,
+            text=True,
+            timeout=30,
+        )
+
+        # Parse JSON output (doctor outputs to stdout even on warnings)
+        try:
+            data = json.loads(result.stdout)
+        except json.JSONDecodeError:
+            # Fall back to stderr if stdout isn't valid JSON
+            print("ERROR: Could not parse doctor output")
+            print(result.stdout)
+            print(result.stderr)
+            return 1
+
+        # Filter checks to only show issues, excluding ignored warnings
+        checks = data.get("checks", [])
+        issues = [
+            check for check in checks
+            if check.get("status") in DOCTOR_ISSUE_STATUSES
+            and check.get("name") not in IGNORED_DOCTOR_WARNINGS
+        ]
+
+        # Output filtered result
+        if issues:
+            print(json.dumps({"issues": issues}, indent=2))
+            return 1
+        else:
+            print(json.dumps({"issues": [], "message": "All checks passed (or ignorable)"}))
+            return 0
+
+    except subprocess.TimeoutExpired:
+        print("ERROR: bd doctor timed out")
+        return 1
+    except FileNotFoundError:
+        print("ERROR: bd not found")
+        return 1
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description="Install or update beads (bd)")
     parser.add_argument("--check", action="store_true", help="Only check if update available")
     parser.add_argument("--quiet", action="store_true", help="With --check, output JSON snippet only")
     parser.add_argument("--force", action="store_true", help="Force reinstall even if up to date")
+    parser.add_argument("--doctor", action="store_true", help="Run bd doctor with filtered output")
     args = parser.parse_args()
+
+    # Handle --doctor separately (standalone operation)
+    if args.doctor:
+        return run_doctor()
 
     quiet = args.quiet and args.check
 
@@ -226,18 +306,26 @@ def main() -> int:
         # Check if update needed
         update_available = current != latest
 
-        if not update_available and not args.force:
-            log("\nAlready up to date!")
-            if quiet:
-                print('"beads_update_available": false')
-            return 0
-
         if args.check:
+            # Include beads repo status for changelog review
+            repo_status = check_beads_repo()
+
             if quiet:
                 print(f'"beads_update_available": {str(update_available).lower()}')
-            elif update_available:
-                print(f"\nUpdate available: {current} -> {latest}")
+            else:
+                if update_available:
+                    print(f"\nUpdate available: {current} -> {latest}")
+                else:
+                    print("\nAlready up to date!")
+                print(f"\nChangelog repo: {repo_status['path']}")
+                print(f"  Status: {repo_status['message']}")
+                if repo_status['exists']:
+                    print("  Run: git -C /tmp/beads pull")
             return 1 if update_available else 0
+
+        if not update_available and not args.force:
+            log("\nAlready up to date!")
+            return 0
 
         # Find download URL
         archive_name = f"beads_{latest.lstrip('v')}_{plat}.tar.gz"
