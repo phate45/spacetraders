@@ -93,6 +93,8 @@ Skills you use for orchestration (agents don't use these):
 
 **Note:** Agent files don't support `@` includes—they're self-contained. `task-executor` and `rust-implementer` share workflow structure; sync manually when updating.
 
+**IMPORTANT:** When creating or modifying agents, skills, or workflow scripts, update `ARCHITECTURE.md` to reflect the changes. This is the source of truth for how the system works—agents like `beads-guide` read it for context.
+
 **Built-in Agents** (via Task tool `subagent_type`):
 - `Explore` - Codebase exploration and context gathering
 - `claude-code-guide` - Claude Code documentation lookup
