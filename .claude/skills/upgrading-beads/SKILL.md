@@ -15,17 +15,16 @@ Complete workflow for checking and upgrading the beads CLI tool.
 python3 scripts/install_beads.py --check
 ```
 
-Shows installed version, latest version, and whether update is available.
+Shows:
+- Installed version vs latest version
+- Whether update is available
+- `/tmp/beads` repo status (for changelog review)
 
 If no update available, stop here. Otherwise note the version range for changelog review.
 
-### 2. Review Changelog (If /tmp/beads Exists)
+### 2. Review Changelog
 
-Check if local beads repo exists:
-
-```bash
-test -d /tmp/beads && echo "exists" || echo "missing"
-```
+The `--check` output shows whether `/tmp/beads` exists.
 
 **If exists:** Pull latest and dispatch Explore agent for changelog analysis:
 
@@ -77,28 +76,24 @@ Hooks provide automatic sync between database and JSONL:
 ### 6. Verify Installation
 
 ```bash
-bd doctor
+python3 scripts/install_beads.py --doctor
 ```
 
-Checks for common issues (sync problems, missing hooks).
+Runs `bd doctor` with filtered output:
+- Filters to warning/error/fail statuses only
+- Excludes known ignorable warnings (Claude Plugin, Claude Integration, Issues Tracking)
+- Returns exit 0 if clean, exit 1 if issues found
 
-**For JSON output**, filter to show only non-ok checks (preserves top-level fields):
-```bash
-bd doctor --json 2>/dev/null | jq '.checks = [.checks[] | select(.status != "ok")]'
+**Output format:**
+```json
+{"issues": [...]}           // If problems found
+{"issues": [], "message": "All checks passed (or ignorable)"}  // If clean
 ```
 
-**Fallback:** If the `!=` operator causes escaping issues in certain execution contexts, use positive matching instead:
-```bash
-bd doctor --json 2>/dev/null | jq '.checks | map(select(.status == "warning" or .status == "error" or .status == "fail"))'
-```
-
-**Ignore these warnings** (local divergence from author's expectations):
-- `Claude Plugin: beads plugin not installed`
-- `Claude Integration: Not configured`
-- `Issues Tracking: issues.jsonl is ignored by git` — expected with sync-branch workflow
+**Additional ignorable warning** (not filtered by script):
 - `DB-JSONL Sync: Count mismatch` — transient; resolves after `bd sync`
 
-**Surface to Mark** any other warnings or failures. If the changelog review (step 2 or 4) has relevant context for the issue, include it.
+**Surface to Mark** any issues in the output. If the changelog review (step 2 or 4) has relevant context, include it.
 
 **Do NOT run `bd doctor --fix`** — it's interactive and requires Mark's input.
 
