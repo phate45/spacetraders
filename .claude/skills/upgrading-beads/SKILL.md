@@ -181,11 +181,48 @@ bd sync
 
 **Escalate to Mark** if you detect this pattern — do not attempt the nuclear fix autonomously.
 
+### Sync Restoring Stale Data from Master
+
+`bd sync` overwrites good local JSONL with stale data. Working copy keeps reverting to fewer issues than the database has.
+
+**Symptoms:**
+- After sync, JSONL has fewer lines than before
+- `bd doctor` shows DB-JSONL count mismatch immediately after sync
+- Sync worktree has correct data, but main JSONL doesn't update
+
+**Cause:** `issues.jsonl` was historically committed to master. When sync pulls, git restores the stale committed version over uncommitted changes.
+
+**Root cause fix:** Remove `issues.jsonl` from master's history entirely, making beads-sync the sole owner.
+
+**High-level procedure:**
+1. Update `.beads/.gitignore` to ignore `issues.jsonl` and `interactions.jsonl`
+2. Commit the gitignore change
+3. Run `git filter-repo --path .beads/issues.jsonl --path .beads/interactions.jsonl --invert-paths --force`
+4. Re-add origin remote (filter-repo removes it)
+5. Create backup branches from origin refs
+6. Commit existing worktree files to beads-sync
+7. Re-init database with custom statuses
+8. Verify with `bd sync` and `bd doctor`
+
+**Full details:** See vault work log:
+`/home/phate/Documents/second-brain/01_Projects/spacetraders/logs/2025-12-30.md`
+Section: "Beads Upgrade and History Cleanup"
+
+### AGENTS.md Created During Troubleshooting
+
+`bd init` creates an `AGENTS.md` file in the project root with landing-the-plane instructions.
+
+**If this appears during troubleshooting:** Delete it — we have our own agent workflow documentation.
+
+```bash
+rm AGENTS.md
+```
+
 ### Full Troubleshooting Reference
 
-For detailed walkthrough with context, see vault work log:
-`/home/phate/Documents/second-brain/01_Projects/spacetraders/logs/2025-12-27.md`
-Section: "Beads Upgrade and DB-JSONL Sync Troubleshooting"
+For detailed walkthrough with context, see vault work logs:
+- `logs/2025-12-27.md` — "Beads Upgrade and DB-JSONL Sync Troubleshooting"
+- `logs/2025-12-30.md` — "Beads Upgrade and History Cleanup" (filter-repo procedure)
 
 ## CLI Notes
 
