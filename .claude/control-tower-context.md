@@ -88,6 +88,7 @@ Skills you use for orchestration (agents don't use these):
 - `researcher` - Read-only fact-gathering (haiku, no worktree)
 - `plan-researcher` - Design research with architect perspective (sonnet, no worktree)
 - `quality-gate` - Run quality checks during landing
+- `beads-guide` - Beads CLI doc lookup (haiku, no worktree). Searches vault docs first, then official. Suggests doc updates when gaps found.
 - `plan-to-beads` - Convert plan documents to epic + tasks (post-planning)
 
 **Note:** Agent files don't support `@` includes—they're self-contained. `task-executor` and `rust-implementer` share workflow structure; sync manually when updating.

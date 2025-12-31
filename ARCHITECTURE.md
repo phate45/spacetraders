@@ -20,7 +20,8 @@ Mark (human)
         │   └── plan-researcher  → Design research (sonnet)
         │
         ├── Utility (no worktree)
-        │   └── quality-gate     → Landing verification
+        │   ├── quality-gate     → Landing verification
+        │   └── beads-guide      → Beads doc lookup (haiku)
         │
         └── Planning (no worktree)
             └── plan-to-beads    → Convert plans to epic + tasks
@@ -40,6 +41,7 @@ Mark (human)
 | researcher | [`.claude/agents/researcher.md`](.claude/agents/researcher.md) | [`/agent-researching`](.claude/skills/agent-researching/SKILL.md) | Fact-gathering (haiku) |
 | plan-researcher | [`.claude/agents/plan-researcher.md`](.claude/agents/plan-researcher.md) | [`/agent-researching`](.claude/skills/agent-researching/SKILL.md) | Design research (sonnet) |
 | quality-gate | [`.claude/agents/quality-gate.md`](.claude/agents/quality-gate.md) | — | Landing verification |
+| beads-guide | [`.claude/agents/beads-guide.md`](.claude/agents/beads-guide.md) | — | Beads doc lookup + gap detection |
 | plan-to-beads | [`.claude/agents/plan-to-beads.md`](.claude/agents/plan-to-beads.md) | — | Convert plans to epic + tasks |
 
 ### Agent File Structure
@@ -285,6 +287,7 @@ git branch -d task/<id>              # Deletes branch
 │   ├── researcher.md         # Fact-gathering (haiku)
 │   ├── plan-researcher.md    # Design research (sonnet)
 │   ├── quality-gate.md       # Landing verification
+│   ├── beads-guide.md        # Beads doc lookup (haiku)
 │   └── plan-to-beads.md      # Plan → epic + tasks
 ├── skills/
 │   ├── agent-working/        # Implementation workflow
