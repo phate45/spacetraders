@@ -45,7 +45,7 @@ The goal is that all work flows through the task graph. Quick fixes become track
 ## Session Protocol
 
 **Start**:
-1. `python3 scripts/session-start.py --pretty` - single call returns ready work, in-progress, and drafts
+1. `python3 scripts/session-start.py` - single call returns ready work, in-progress, and drafts
 2. Report state to partner (ready count, active work, drafts needing refinement)
 
 **During**:
