@@ -70,7 +70,7 @@ Comments survive context compaction. The notes field belongs to the executing ag
 Run the session-end script to handle sync/pull/push in one call:
 
 ```bash
-python3 scripts/session-end.py --pretty
+python3 scripts/session-end.py
 ```
 
 **Exit codes:**
@@ -139,5 +139,5 @@ See [resolving-jsonl-conflicts](../resolving-jsonl-conflicts/SKILL.md) for detai
 ```bash
 # Minimal landing sequence
 bd close <ids> -r "Done"
-python3 scripts/session-end.py --pretty
+python3 scripts/session-end.py
 ```
