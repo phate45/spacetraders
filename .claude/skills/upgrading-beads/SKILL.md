@@ -258,6 +258,9 @@ For detailed walkthrough with context, see vault work logs:
 
 - `bd sync` does **not** have `--json` output
 - `bd doctor --fix` is interactive — do not run without Mark
+- `bd list --all` has a **default limit of 50** (v0.44.0+) — use `--limit 0` for unlimited results
+  - Without `--limit 0`, large issue sets get silently truncated
+  - Individual `bd list --status X` queries aren't affected (they return all matching issues under the limit)
 
 ## Hands-Off Rules
 
