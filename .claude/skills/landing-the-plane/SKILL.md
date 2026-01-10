@@ -97,6 +97,8 @@ Synthesize the session into a work log entry in the vault:
 
 This creates a narrative summary of what was accomplished, not just a list of closed tasks.
 
+**Important:** The vault has its own git lifecycle. Do NOT commit or push vault changes — only write/edit files there.
+
 ### 7. Hand Off
 
 Provide context for next session:
