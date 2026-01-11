@@ -90,10 +90,26 @@ Runs `bd doctor` with filtered output:
 {"issues": [], "message": "All checks passed (or ignorable)"}  // If clean
 ```
 
-**Additional ignorable warning** (not filtered by script):
+**Additional ignorable warnings** (not filtered by script):
 - `DB-JSONL Sync: Count mismatch` — transient; resolves after `bd sync`
 
-**Surface to Mark** any issues in the output. If the changelog review (step 2 or 4) has relevant context, include it.
+**Known false positives (v0.47.0+):**
+
+If doctor reports these warnings, they are safe to ignore:
+```
+"Multiple JSONL files found: issues.jsonl, sync_base.jsonl"
+"2 temporary merge file(s) found: .sync.lock, sync_base.jsonl"
+```
+
+**Why these are false positives:** Doctor's `CheckMergeArtifacts` incorrectly classifies sync state files as "temporary merge artifacts":
+- `sync_base.jsonl` — **Persistent** base state for 3-way merge. Saved at end of each successful sync, loaded at start of next sync. Without it, every sync treats itself as "first sync" and loses conflict resolution context.
+- `.sync.lock` — Mutex file for sync concurrency. The 0-byte file persists after sync releases the lock; this is harmless.
+
+These are NOT the same as actual temporary merge artifacts (`beads.left.jsonl`, `beads.right.jsonl`, etc.) which ARE cleaned up after merges.
+
+**Do NOT run `bd doctor --fix` to remove these** — it would delete persistent sync state. The bug is in doctor's classification, not in sync's behavior.
+
+**Surface to Mark** any OTHER issues in the output. If the changelog review (step 2 or 4) has relevant context, include it.
 
 **Do NOT run `bd doctor --fix`** — it's interactive and requires Mark's input.
 
